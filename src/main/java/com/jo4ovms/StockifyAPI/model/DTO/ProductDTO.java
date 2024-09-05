@@ -24,7 +24,7 @@ public class ProductDTO {
     private Integer quantity;
 
     @NotNull(message = "Supplier ID is required.")
-    private Long SupplierId;
+    private Long supplierId;
 
     private String supplierName;
 }
