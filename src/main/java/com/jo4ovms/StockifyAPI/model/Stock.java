@@ -20,7 +20,7 @@ public class Stock {
     @Column(nullable = false)
     private boolean available;
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "stock_value")
     private Double value;
 
     @OneToOne

@@ -22,7 +22,7 @@ public class Product {
     private String name;
 
     @NotNull
-    @Column(nullable = false)
+    @Column(nullable = false, name = "product_value")
     private Double value;
 
     @NotNull
