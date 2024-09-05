@@ -12,6 +12,9 @@ import com.jo4ovms.StockifyAPI.repository.StockRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 public class StockMovementService {
     @Autowired
@@ -41,5 +44,20 @@ public class StockMovementService {
         stockMovementRepository.save(stockMovement);
 
         return stockMovementMapper.toStockMovementDTO(stockMovement);
+    }
+
+
+    public StockMovementDTO getStockMovementById(Long id) {
+        StockMovement stockMovement = stockMovementRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Stock movement with id " + id + " not found."));
+        return stockMovementMapper.toStockMovementDTO(stockMovement);
+    }
+
+
+    public List<StockMovementDTO> getAllStockMovements() {
+        return stockMovementRepository.findAll()
+                .stream()
+                .map(stockMovementMapper::toStockMovementDTO)
+                .collect(Collectors.toList());
     }
 }
