@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
+import org.hibernate.validator.constraints.br.CNPJ;
 
 import java.util.List;
 
@@ -40,8 +41,9 @@ public class Supplier {
     private String productType;
 
     @NotBlank
-    @Size(max = 20)
+    @Size(max = 14)
     @Column(nullable = false, unique = true)
+    @CNPJ
     private String cnpj;
 
     @OneToMany(mappedBy = "supplier", fetch = FetchType.LAZY)
