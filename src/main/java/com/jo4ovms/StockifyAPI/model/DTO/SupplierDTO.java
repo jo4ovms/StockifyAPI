@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
+import org.hibernate.validator.constraints.br.CNPJ;
 
 @Data
 public class SupplierDTO {
@@ -27,4 +28,9 @@ public class SupplierDTO {
     @NotBlank(message = "Supplier Product Type cannot be blank.")
     @Size(max = 50, message = "Product type cannot exceed 50 characters.")
     private String productType;
+
+    @NotBlank(message = "Supplier CNPJ cannot be blank.")
+    @Size(max = 14, message = "CNPJ cannot exceed 14 characters.")
+    @CNPJ(message = "Invalid CNPJ format.")
+    private String cnpj;
 }
