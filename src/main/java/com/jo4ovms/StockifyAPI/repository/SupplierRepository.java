@@ -18,4 +18,5 @@ public interface SupplierRepository extends JpaRepository<Supplier, Long> {
     List<Supplier> findByNameContainingIgnoreCase(String name);
     Optional<Supplier> findByCnpj(String cnpj);
 
+    boolean existsByCnpj(String cnpj);
 }
