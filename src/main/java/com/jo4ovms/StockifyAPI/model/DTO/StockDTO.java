@@ -20,5 +20,9 @@ public class StockDTO {
     @PositiveOrZero(message = "Stock value must be zero or positive")
     private Double value;
 
+
+    @NotNull(message = "Product ID is required.")
+    private Long productId;
+
     private String productName;
 }
