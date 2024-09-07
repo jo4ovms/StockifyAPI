@@ -2,6 +2,12 @@ package com.jo4ovms.StockifyAPI.controller;
 
 import com.jo4ovms.StockifyAPI.model.DTO.SupplierDTO;
 import com.jo4ovms.StockifyAPI.service.SupplierService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -15,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/suppliers")
+@Tag(name = "Supplier", description = "API for managing suppliers")
 public class SupplierController {
 
     private final SupplierService supplierService;
@@ -25,6 +32,13 @@ public class SupplierController {
         this.pagedResourcesAssembler = pagedResourcesAssembler;
     }
 
+    @Operation(summary = "Create a new supplier", description = "Create a new supplier and return the created supplier's details.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Supplier created",
+                    content = { @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = SupplierDTO.class)) }),
+            @ApiResponse(responseCode = "400", description = "Invalid input data", content = @Content)
+    })
     @PostMapping
     @CacheEvict(value = "suppliers", allEntries = true)
     public ResponseEntity<SupplierDTO> createSupplier(
@@ -33,6 +47,13 @@ public class SupplierController {
         return new ResponseEntity<>(createdSupplier, HttpStatus.CREATED);
     }
 
+    @Operation(summary = "Update an existing supplier", description = "Update the supplier with the specified ID.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Supplier updated",
+                    content = { @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = SupplierDTO.class)) }),
+            @ApiResponse(responseCode = "404", description = "Supplier not found", content = @Content)
+    })
     @PutMapping("/{id}")
     @CacheEvict(value = "suppliers", allEntries = true)
     public ResponseEntity<SupplierDTO> updateSupplier(
@@ -42,6 +63,12 @@ public class SupplierController {
         return ResponseEntity.ok(updatedSupplier);
     }
 
+    @Operation(summary = "Retrieve all suppliers", description = "Retrieve a paginated list of all suppliers.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Suppliers retrieved",
+                    content = { @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = Page.class)) })
+    })
     @GetMapping
     @Cacheable(value = "suppliers")
     public ResponseEntity<PagedModel<EntityModel<SupplierDTO>>> getAllSuppliers(
@@ -52,6 +79,14 @@ public class SupplierController {
         return ResponseEntity.ok(pagedModel);
     }
 
+
+    @Operation(summary = "Retrieve a supplier by ID", description = "Retrieve the details of a supplier by its ID.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Supplier retrieved",
+                    content = { @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = SupplierDTO.class)) }),
+            @ApiResponse(responseCode = "404", description = "Supplier not found", content = @Content)
+    })
     @GetMapping("/{id}")
     @Cacheable(value = "suppliers", key = "#id")
     public ResponseEntity<SupplierDTO> getSupplierById(
@@ -60,6 +95,11 @@ public class SupplierController {
         return ResponseEntity.ok(supplier);
     }
 
+    @Operation(summary = "Delete a supplier", description = "Delete a supplier by its ID.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Supplier deleted", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Supplier not found", content = @Content)
+    })
     @DeleteMapping("/{id}")
     @CacheEvict(value = "suppliers", allEntries = true)
     public ResponseEntity<Void> deleteSupplier(
