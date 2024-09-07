@@ -1,4 +1,4 @@
-package com.jo4ovms.StockifyAPI.service;
+package com.jo4ovms.StockifyAPI.service.stock;
 
 import com.jo4ovms.StockifyAPI.exception.ResourceNotFoundException;
 import com.jo4ovms.StockifyAPI.mapper.StockMapper;

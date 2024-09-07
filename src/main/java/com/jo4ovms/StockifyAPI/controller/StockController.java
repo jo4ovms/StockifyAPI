@@ -1,7 +1,7 @@
 package com.jo4ovms.StockifyAPI.controller;
 
 import com.jo4ovms.StockifyAPI.model.DTO.StockDTO;
-import com.jo4ovms.StockifyAPI.service.StockService;
+import com.jo4ovms.StockifyAPI.service.stock.StockService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
