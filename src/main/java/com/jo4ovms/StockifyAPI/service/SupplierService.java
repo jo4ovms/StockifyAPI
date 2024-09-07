@@ -2,6 +2,7 @@ package com.jo4ovms.StockifyAPI.service;
 
 import com.jo4ovms.StockifyAPI.exception.DuplicateResourceException;
 import com.jo4ovms.StockifyAPI.exception.ResourceNotFoundException;
+import com.jo4ovms.StockifyAPI.exception.ValidationException;
 import com.jo4ovms.StockifyAPI.mapper.SupplierMapper;
 import com.jo4ovms.StockifyAPI.model.DTO.SupplierDTO;
 import com.jo4ovms.StockifyAPI.model.Supplier;
@@ -15,6 +16,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 
 @Service
@@ -69,6 +72,21 @@ public class SupplierService {
         Supplier supplier = supplierRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Supplier with id " + id + " not found."));
         supplierRepository.delete(supplier);
+    }
+
+
+    @Cacheable(value = "suppliersByName", key = "#name")
+    public List<SupplierDTO> findSuppliersByName(String name) {
+        if (name == null || name.trim().isEmpty()) {
+            throw new ValidationException("Name must not be null or empty.");
+        }
+
+        List<Supplier> suppliers = supplierRepository.findByNameContainingIgnoreCase(name);
+        if (suppliers.isEmpty()) {
+            throw new ResourceNotFoundException("No suppliers found with name containing: " + name);
+        }
+
+        return suppliers.stream().map(supplierMapper::toSupplierDTO).toList();
     }
 }
 

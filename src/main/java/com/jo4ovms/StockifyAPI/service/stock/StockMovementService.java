@@ -10,10 +10,12 @@ import com.jo4ovms.StockifyAPI.model.StockMovement;
 import com.jo4ovms.StockifyAPI.repository.StockMovementRepository;
 import com.jo4ovms.StockifyAPI.repository.StockRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class StockMovementService {
@@ -26,6 +28,7 @@ public class StockMovementService {
     @Autowired
     private StockRepository stockRepository;
 
+    @CacheEvict(value = "stockMovements", key = "#id")
     public StockMovementDTO registerMovement(StockMovementDTO stockMovementDTO) {
         Stock stock = stockRepository.findById(stockMovementDTO.getStockId())
                 .orElseThrow(() -> new ResourceNotFoundException("Stock with id " + stockMovementDTO.getStockId() + " not found."));
@@ -47,6 +50,7 @@ public class StockMovementService {
     }
 
 
+    @Cacheable(value = "stockMovements", key = "#id")
     public StockMovementDTO getStockMovementById(Long id) {
         StockMovement stockMovement = stockMovementRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Stock movement with id " + id + " not found."));
@@ -54,10 +58,8 @@ public class StockMovementService {
     }
 
 
-    public List<StockMovementDTO> getAllStockMovements() {
-        return stockMovementRepository.findAll()
-                .stream()
-                .map(stockMovementMapper::toStockMovementDTO)
-                .collect(Collectors.toList());
+    public Page<StockMovementDTO> getAllStockMovements(Pageable pageable) {
+        return stockMovementRepository.findAll(pageable)
+                .map(stockMovementMapper::toStockMovementDTO);
     }
 }

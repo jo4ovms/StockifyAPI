@@ -9,6 +9,8 @@ import com.jo4ovms.StockifyAPI.repository.ProductRepository;
 import com.jo4ovms.StockifyAPI.repository.StockRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -27,6 +29,7 @@ public class StockService {
     @Autowired
     private StockMapper stockMapper;
 
+    @CacheEvict(value = "stocks", allEntries = true)
     public StockDTO createStock(StockDTO stockDTO) {
         Product product = productRepository.findById(stockDTO.getProductId())
                 .orElseThrow(() -> new ResourceNotFoundException("Product with id " + stockDTO.getProductId() + " not found"));
@@ -37,6 +40,7 @@ public class StockService {
         return stockMapper.toStockDTO(savedStock);
     }
 
+    @CacheEvict(value = "stocks", allEntries = true)
     public StockDTO updateStock(Long id, StockDTO stockDTO) {
         Stock stock = stockRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Stock with id " + id + " not found"));
@@ -56,12 +60,14 @@ public class StockService {
         return stockRepository.findAll(pageable).map(stockMapper::toStockDTO);
     }
 
+    @Cacheable(value = "stocks", key = "#id")
     public StockDTO getStockById(Long id) {
         Stock stock = stockRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Stock with id " + id + " not found"));
         return stockMapper.toStockDTO(stock);
     }
 
+    @CacheEvict(value = "stocks", allEntries = true)
     public void deleteStock(Long id) {
         Stock stock = stockRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Stock with id " + id + " not found"));

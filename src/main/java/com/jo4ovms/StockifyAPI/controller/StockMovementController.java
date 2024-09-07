@@ -11,6 +11,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.web.PagedResourcesAssembler;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,9 +28,11 @@ import java.util.List;
 public class StockMovementController {
 
     private final StockMovementService stockMovementService;
+    private final PagedResourcesAssembler<StockMovementDTO> pagedResourcesAssembler;
 
-    public StockMovementController(StockMovementService stockMovementService) {
+    public StockMovementController(StockMovementService stockMovementService, PagedResourcesAssembler<StockMovementDTO> pagedResourcesAssembler) {
         this.stockMovementService = stockMovementService;
+        this.pagedResourcesAssembler = pagedResourcesAssembler;
     }
 
     @Operation(summary = "Register a new stock movement", description = "Registers a new stock movement.")
@@ -67,8 +74,13 @@ public class StockMovementController {
     })
     @GetMapping
     @Cacheable(value = "stockMovements")
-    public ResponseEntity<List<StockMovementDTO>> getAllStockMovements() {
-        List<StockMovementDTO> stockMovements = stockMovementService.getAllStockMovements();
-        return ResponseEntity.ok(stockMovements);
+    public ResponseEntity<PagedModel<EntityModel<StockMovementDTO>>> getAllStockMovements(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        PageRequest pageable = PageRequest.of(page, size);
+        Page<StockMovementDTO> stockMovements = stockMovementService.getAllStockMovements(pageable);
+        PagedModel<EntityModel<StockMovementDTO>> pagedModel = pagedResourcesAssembler.toModel(stockMovements);
+        return ResponseEntity.ok(pagedModel);
     }
 }

@@ -1,12 +1,19 @@
 package com.jo4ovms.StockifyAPI.controller;
 
 import com.jo4ovms.StockifyAPI.model.DTO.StockDTO;
+import com.jo4ovms.StockifyAPI.model.DTO.StockMovementDTO;
 import com.jo4ovms.StockifyAPI.service.stock.StockReportService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.web.PagedResourcesAssembler;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.PagedModel;
+import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,9 +32,11 @@ import java.util.Map;
 public class StockReportController {
 
     private final StockReportService stockReportService;
+    private final PagedResourcesAssembler<StockMovementDTO> pagedResourcesAssembler;
 
-    public StockReportController(StockReportService stockReportService) {
+    public StockReportController(StockReportService stockReportService, PagedResourcesAssembler<StockMovementDTO> pagedResourcesAssembler) {
         this.stockReportService = stockReportService;
+        this.pagedResourcesAssembler = pagedResourcesAssembler;
     }
 
     @Operation(summary = "Generate low stock report", description = "Generate a report for products with stock below a certain threshold.")
@@ -38,7 +47,6 @@ public class StockReportController {
     })
     @GetMapping("/low-stock")
     public ResponseEntity<Map<String, Object>> generateLowStockReport(@RequestParam int threshold) {
-        // Validação do parâmetro threshold
         if (threshold <= 0) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("error", "Threshold must be greater than zero."));
@@ -51,7 +59,6 @@ public class StockReportController {
                     .body(Map.of("message", "No products found below the specified threshold."));
         }
 
-        // Adiciona informações extras ao retorno
         Map<String, Object> response = new HashMap<>();
         response.put("reportDate", LocalDate.now());
         response.put("totalProducts", report.size());
@@ -68,7 +75,6 @@ public class StockReportController {
     })
     @GetMapping("/high-stock")
     public ResponseEntity<Map<String, Object>> generateHighStockReport(@RequestParam int threshold) {
-        // Validação do parâmetro threshold
         if (threshold <= 0) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("error", "Threshold must be greater than zero."));
@@ -81,12 +87,32 @@ public class StockReportController {
                     .body(Map.of("message", "No products found above the specified threshold."));
         }
 
-        // Adiciona informações extras ao retorno
         Map<String, Object> response = new HashMap<>();
         response.put("reportDate", LocalDate.now());
         response.put("totalProducts", report.size());
         response.put("products", report);
 
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/movements-report")
+    public ResponseEntity<PagedModel<EntityModel<StockMovementDTO>>> generateStockMovementReport(
+            @RequestParam LocalDate startDate,
+            @RequestParam LocalDate endDate,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        PageRequest pageable = PageRequest.of(page, size);
+        Page<StockMovementDTO> report = stockReportService.generateStockMovementReport(startDate, endDate, pageable);
+
+        PagedModel<EntityModel<StockMovementDTO>> pagedModel = pagedResourcesAssembler.toModel(report,
+                stockMovementDTO -> EntityModel.of(stockMovementDTO,
+                        WebMvcLinkBuilder.linkTo(
+                                WebMvcLinkBuilder.methodOn(StockMovementController.class)
+                                        .getStockMovementById(stockMovementDTO.getId())
+                        ).withSelfRel())
+        );
+
+        return ResponseEntity.ok(pagedModel);
     }
 }
