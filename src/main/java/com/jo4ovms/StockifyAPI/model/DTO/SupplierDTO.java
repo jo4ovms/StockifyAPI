@@ -1,12 +1,13 @@
 package com.jo4ovms.StockifyAPI.model.DTO;
 
+import br.com.caelum.stella.bean.validation.CNPJ;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.Data;
-import org.hibernate.validator.constraints.br.CNPJ;
+import lombok.*;
 
+@NoArgsConstructor
+@AllArgsConstructor
 @Data
 public class SupplierDTO {
     private Long id;
@@ -30,7 +31,9 @@ public class SupplierDTO {
     private String productType;
 
     @NotBlank(message = "Supplier CNPJ cannot be blank.")
-    @Size(max = 14, message = "CNPJ cannot exceed 14 characters.")
+    @Size(max = 20, message = "CNPJ cannot exceed 14 characters.")
     @CNPJ(message = "Invalid CNPJ format.")
     private String cnpj;
+
+
 }
