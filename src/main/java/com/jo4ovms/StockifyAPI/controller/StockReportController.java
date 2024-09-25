@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/reports")
+@RequestMapping("/api/reports")
 @Tag(name = "Stock Report", description = "Endpoints for generating stock reports")
 public class StockReportController {
 

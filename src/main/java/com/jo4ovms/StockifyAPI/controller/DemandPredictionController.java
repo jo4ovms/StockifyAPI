@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/analysis")
+@RequestMapping("/api/analysis")
 @Tag(name = "Demand Prediction", description = "Endpoints for demand prediction analysis")
 public class DemandPredictionController {
 
