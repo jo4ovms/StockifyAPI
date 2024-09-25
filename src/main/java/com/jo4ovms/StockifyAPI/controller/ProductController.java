@@ -19,6 +19,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/products")
 @Tag(name = "Product", description = "API for managing products")
@@ -109,5 +111,17 @@ public class ProductController {
             @PathVariable Long id) {
         productService.deleteProduct(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/supplier/{supplierId}")
+    public ResponseEntity<PagedModel<EntityModel<ProductDTO>>> getProductsBySupplier(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @PathVariable Long supplierId) {
+
+        Page<ProductDTO> products = productService.findProductsBySupplier(supplierId, page, size);
+        PagedModel<EntityModel<ProductDTO>> pagedModel = pagedResourcesAssembler.toModel(products);
+
+        return ResponseEntity.ok(pagedModel);
     }
 }

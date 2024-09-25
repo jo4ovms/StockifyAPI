@@ -97,22 +97,15 @@ public class ProductService {
         productRepository.delete(product);
     }
 
-   // @Cacheable(value = "productsBySupplier", key = "#supplierId")
-    public List<ProductDTO> findProductsBySupplier(Long supplierId) {
-        Supplier supplier = supplierRepository.findById(supplierId)
-                .orElseThrow(() -> new ResourceNotFoundException("Supplier with id " + supplierId + " not found."));
-
-        List<Product> products = productRepository.findBySupplier(supplier);
-        return products.stream().map(productMapper::toProductDTO).toList();
-    }
 
    // @Cacheable(value = "productsByQuantity", key = "#quantity")
-    public List<ProductDTO> findProductsByQuantityGreaterThan(Integer quantity) {
-        if (quantity <= 0) {
-            throw new ValidationException("Quantity must be greater than zero.");
-        }
+   public Page<ProductDTO> findProductsBySupplier(Long supplierId, int page, int size) {
+       Supplier supplier = supplierRepository.findById(supplierId)
+               .orElseThrow(() -> new ResourceNotFoundException("Supplier with id " + supplierId + " not found."));
 
-        List<Product> products = productRepository.findByQuantityGreaterThan(quantity);
-        return products.stream().map(productMapper::toProductDTO).toList();
-    }
+       Pageable pageable = PageRequest.of(page, size);
+       Page<Product> products = productRepository.findBySupplier(supplier, pageable);
+
+       return products.map(productMapper::toProductDTO);
+   }
 }
