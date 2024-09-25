@@ -54,14 +54,10 @@ public class SupplierService {
     }
 
     //@Cacheable(value = "suppliers", key = "#page + '-' + #size")
-    public List<SupplierDTO> findAllSuppliers(int page, int size) {
+    public Page<SupplierDTO> findAllSuppliers(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         Page<Supplier> suppliers = supplierRepository.findAll(pageable);
-        List<SupplierDTO> supplierDTOs = suppliers.stream()
-                .map(supplierMapper::toSupplierDTO)
-                .toList();
-
-        return supplierDTOs;
+        return suppliers.map(supplierMapper::toSupplierDTO);
     }
 
    // @Cacheable(value = "suppliers", key = "#id")
@@ -80,17 +76,13 @@ public class SupplierService {
 
 
    // @Cacheable(value = "suppliersByName", key = "#name")
-    public List<SupplierDTO> findSuppliersByName(String name) {
-        if (name == null || name.trim().isEmpty()) {
-            throw new ValidationException("Name must not be null or empty.");
-        }
-
-        List<Supplier> suppliers = supplierRepository.findByNameContainingIgnoreCase(name);
-        if (suppliers.isEmpty()) {
-            throw new ResourceNotFoundException("No suppliers found with name containing: " + name);
-        }
-
-        return suppliers.stream().map(supplierMapper::toSupplierDTO).toList();
-    }
+   public Page<SupplierDTO> findSuppliersByName(String name, int page, int size) {
+       Pageable pageable = PageRequest.of(page, size);
+       Page<Supplier> suppliers = supplierRepository.findByNameContainingIgnoreCase(name, pageable);
+       if (suppliers.isEmpty()) {
+           throw new ResourceNotFoundException("No suppliers found with name containing: " + name);
+       }
+       return suppliers.map(supplierMapper::toSupplierDTO);
+   }
 }
 

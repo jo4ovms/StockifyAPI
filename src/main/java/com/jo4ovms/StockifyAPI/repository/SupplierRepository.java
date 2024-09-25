@@ -17,6 +17,7 @@ public interface SupplierRepository extends JpaRepository<Supplier, Long> {
     Page<Supplier> findAll(Pageable pageable);
     List<Supplier> findByNameContainingIgnoreCase(String name);
     Optional<Supplier> findByCnpj(String cnpj);
+    Page<Supplier> findByNameContainingIgnoreCase(String name, Pageable pageable);
 
     boolean existsByCnpj(String cnpj);
 }
