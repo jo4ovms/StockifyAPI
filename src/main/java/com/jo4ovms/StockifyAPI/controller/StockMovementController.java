@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/stock-movements")
+@RequestMapping("/api/stock-movements")
 @Tag(name = "Stock Movement", description = "Operations related to stock movements")
 public class StockMovementController {
 
@@ -43,7 +43,7 @@ public class StockMovementController {
             @ApiResponse(responseCode = "400", description = "Invalid input", content = @Content)
     })
     @PostMapping
-    @CacheEvict(value = "stockMovements", allEntries = true)
+   // @CacheEvict(value = "stockMovements", allEntries = true)
     public ResponseEntity<StockMovementDTO> registerMovement(
 
             @Valid @RequestBody StockMovementDTO stockMovementDTO) {
@@ -59,7 +59,7 @@ public class StockMovementController {
             @ApiResponse(responseCode = "404", description = "Stock movement not found", content = @Content)
     })
     @GetMapping("/{id}")
-    @Cacheable(value = "stockMovements", key = "#id")
+   // @Cacheable(value = "stockMovements", key = "#id")
     public ResponseEntity<StockMovementDTO> getStockMovementById(
             @PathVariable Long id) {
         StockMovementDTO stockMovement = stockMovementService.getStockMovementById(id);
@@ -73,7 +73,7 @@ public class StockMovementController {
                             schema = @Schema(implementation = List.class)) })
     })
     @GetMapping
-    @Cacheable(value = "stockMovements")
+    //@Cacheable(value = "stockMovements")
     public ResponseEntity<PagedModel<EntityModel<StockMovementDTO>>> getAllStockMovements(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size

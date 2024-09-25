@@ -28,7 +28,7 @@ public class StockMovementService {
     @Autowired
     private StockRepository stockRepository;
 
-    @CacheEvict(value = "stockMovements", key = "#id")
+   // @CacheEvict(value = "stockMovements", key = "#id")
     public StockMovementDTO registerMovement(StockMovementDTO stockMovementDTO) {
         Stock stock = stockRepository.findById(stockMovementDTO.getStockId())
                 .orElseThrow(() -> new ResourceNotFoundException("Stock with id " + stockMovementDTO.getStockId() + " not found."));
@@ -50,7 +50,7 @@ public class StockMovementService {
     }
 
 
-    @Cacheable(value = "stockMovements", key = "#id")
+   // @Cacheable(value = "stockMovements", key = "#id")
     public StockMovementDTO getStockMovementById(Long id) {
         StockMovement stockMovement = stockMovementRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Stock movement with id " + id + " not found."));

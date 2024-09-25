@@ -20,7 +20,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/products")
+@RequestMapping("/api/products")
 @Tag(name = "Product", description = "API for managing products")
 public class ProductController {
 
@@ -40,7 +40,7 @@ public class ProductController {
             @ApiResponse(responseCode = "400", description = "Invalid input data", content = @Content)
     })
     @PostMapping
-    @CacheEvict(value = "products", allEntries = true)
+   // @CacheEvict(value = "products", allEntries = true)
     public ResponseEntity<ProductDTO> createProduct(@Valid @RequestBody ProductDTO productDTO) {
         ProductDTO createdProduct = productService.createProduct(productDTO);
         return new ResponseEntity<>(createdProduct, HttpStatus.CREATED);
@@ -55,7 +55,7 @@ public class ProductController {
             @ApiResponse(responseCode = "404", description = "Product not found", content = @Content)
     })
     @PutMapping("/{id}")
-    @CacheEvict(value = "products", allEntries = true)
+   // @CacheEvict(value = "products", allEntries = true)
     public ResponseEntity<ProductDTO> updateProduct(
             @PathVariable Long id,
             @Valid @RequestBody ProductDTO productDTO) {
@@ -70,8 +70,8 @@ public class ProductController {
                     content = { @Content(mediaType = "application/json",
                             schema = @Schema(implementation = PagedModel.class)) })
     })
+   // @Cacheable(value = "products")
     @GetMapping
-    @Cacheable(value = "products")
     public ResponseEntity<PagedModel<EntityModel<ProductDTO>>> getAllProducts(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -90,7 +90,7 @@ public class ProductController {
             @ApiResponse(responseCode = "404", description = "Product not found", content = @Content)
     })
     @GetMapping("/{id}")
-    @Cacheable(value = "products", key = "#id")
+  //  @Cacheable(value = "products", key = "#id")
     public ResponseEntity<ProductDTO> getProductById(
             @PathVariable Long id) {
         ProductDTO product = productService.findProductById(id);
@@ -104,7 +104,7 @@ public class ProductController {
             @ApiResponse(responseCode = "404", description = "Product not found", content = @Content)
     })
     @DeleteMapping("/{id}")
-    @CacheEvict(value = "products", allEntries = true)
+  //  @CacheEvict(value = "products", allEntries = true)
     public ResponseEntity<Void> deleteProduct(
             @PathVariable Long id) {
         productService.deleteProduct(id);

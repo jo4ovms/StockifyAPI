@@ -30,7 +30,7 @@ public class SupplierService {
     @Autowired
     private SupplierMapper supplierMapper;
 
-    @CachePut(value = "suppliers", key = "#result.id")
+    //@CachePut(value = "suppliers", key = "#result.id")
     public SupplierDTO createSupplier(SupplierDTO supplierDTO) {
         if (supplierRepository.existsByCnpj(supplierDTO.getCnpj())) {
             throw new DuplicateResourceException("Supplier with CNPJ " + supplierDTO.getCnpj() + " already exists.");
@@ -40,7 +40,7 @@ public class SupplierService {
         return supplierMapper.toSupplierDTO(savedSupplier);
     }
 
-    @CachePut(value = "suppliers", key = "#id")
+    //@CachePut(value = "suppliers", key = "#id")
     public SupplierDTO updateSupplier(Long id, SupplierDTO supplierDTO) {
         Supplier supplier = supplierRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Supplier with id " + id + " not found."));
@@ -53,21 +53,25 @@ public class SupplierService {
         return supplierMapper.toSupplierDTO(updatedSupplier);
     }
 
-    @Cacheable(value = "suppliers")
-    public Page<SupplierDTO> findAllSuppliers(int page, int size) {
+    //@Cacheable(value = "suppliers", key = "#page + '-' + #size")
+    public List<SupplierDTO> findAllSuppliers(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         Page<Supplier> suppliers = supplierRepository.findAll(pageable);
-        return suppliers.map(supplierMapper::toSupplierDTO);
+        List<SupplierDTO> supplierDTOs = suppliers.stream()
+                .map(supplierMapper::toSupplierDTO)
+                .toList();
+
+        return supplierDTOs;
     }
 
-    @Cacheable(value = "suppliers", key = "#id")
+   // @Cacheable(value = "suppliers", key = "#id")
     public SupplierDTO findSupplierById(Long id) {
         Supplier supplier = supplierRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Supplier with id " + id + " not found."));
         return supplierMapper.toSupplierDTO(supplier);
     }
 
-    @CacheEvict(value = "suppliers", key = "#id")
+   // @CacheEvict(value = "suppliers", key = "#id")
     public void deleteSupplier(Long id) {
         Supplier supplier = supplierRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Supplier with id " + id + " not found."));
@@ -75,7 +79,7 @@ public class SupplierService {
     }
 
 
-    @Cacheable(value = "suppliersByName", key = "#name")
+   // @Cacheable(value = "suppliersByName", key = "#name")
     public List<SupplierDTO> findSuppliersByName(String name) {
         if (name == null || name.trim().isEmpty()) {
             throw new ValidationException("Name must not be null or empty.");

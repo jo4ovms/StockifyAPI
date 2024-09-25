@@ -34,7 +34,7 @@ public class ProductService {
     @Autowired
     private ProductMapper productMapper;
 
-    @CachePut(value = "products", key = "#result.id")
+    //@CachePut(value = "products", key = "#result.id")
     public ProductDTO createProduct(ProductDTO productDTO) {
         Supplier supplier = supplierRepository.findById(productDTO.getSupplierId())
                 .orElseThrow(() -> new ResourceNotFoundException("Supplier with id " + productDTO.getSupplierId() + " not found."));
@@ -48,7 +48,7 @@ public class ProductService {
         return productMapper.toProductDTO(savedProduct);
     }
 
-    @CachePut(value = "products", key = "#id")
+    //@CachePut(value = "products", key = "#id")
     public ProductDTO updateProduct(Long id, ProductDTO productDTO) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product with id " + id + " not found"));
@@ -64,7 +64,7 @@ public class ProductService {
         return productMapper.toProductDTO(updatedProduct);
     }
 
-    @Cacheable(value = "products")
+   // @Cacheable(value = "products")
     public Page<ProductDTO> findAllProducts(int page, int size, String nameFilter) {
         if (page < 0 || size <= 0) {
             throw new IllegalArgumentException("Page number or size must not be less than zero.");
@@ -83,21 +83,21 @@ public class ProductService {
         return products.map(productMapper::toProductDTO);
     }
 
-    @Cacheable(value = "products", key = "#id")
+    //@Cacheable(value = "products", key = "#id")
     public ProductDTO findProductById(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product with id " + id + " not found"));
         return productMapper.toProductDTO(product);
     }
 
-    @CacheEvict(value = "products", key = "#id")
+   // @CacheEvict(value = "products", key = "#id")
     public void deleteProduct(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product with id " + id + " not found"));
         productRepository.delete(product);
     }
 
-    @Cacheable(value = "productsBySupplier", key = "#supplierId")
+   // @Cacheable(value = "productsBySupplier", key = "#supplierId")
     public List<ProductDTO> findProductsBySupplier(Long supplierId) {
         Supplier supplier = supplierRepository.findById(supplierId)
                 .orElseThrow(() -> new ResourceNotFoundException("Supplier with id " + supplierId + " not found."));
@@ -106,7 +106,7 @@ public class ProductService {
         return products.stream().map(productMapper::toProductDTO).toList();
     }
 
-    @Cacheable(value = "productsByQuantity", key = "#quantity")
+   // @Cacheable(value = "productsByQuantity", key = "#quantity")
     public List<ProductDTO> findProductsByQuantityGreaterThan(Integer quantity) {
         if (quantity <= 0) {
             throw new ValidationException("Quantity must be greater than zero.");

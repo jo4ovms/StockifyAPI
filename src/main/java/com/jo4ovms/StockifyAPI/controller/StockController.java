@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.*;
 
 
 @RestController
-@RequestMapping("/stocks")
+@RequestMapping("/api/stock")
 @Tag(name = "Stock", description = "Operations related to stock management")
 public class StockController {
 
@@ -42,7 +42,7 @@ public class StockController {
             @ApiResponse(responseCode = "400", description = "Invalid input", content = @Content)
     })
     @PostMapping
-    @CacheEvict(value = "stocks", allEntries = true)
+   // @CacheEvict(value = "stocks", allEntries = true)
     public ResponseEntity<StockDTO> createStock(@Valid @RequestBody StockDTO stockDTO) {
         StockDTO createdStock = stockService.createStock(stockDTO);
         return new ResponseEntity<>(createdStock, HttpStatus.CREATED);
@@ -56,7 +56,7 @@ public class StockController {
             @ApiResponse(responseCode = "404", description = "Stock not found", content = @Content)
     })
     @PutMapping("/{id}")
-    @CacheEvict(value = "stocks", allEntries = true)
+  //  @CacheEvict(value = "stocks", allEntries = true)
     public ResponseEntity<StockDTO> updateStock(
             @PathVariable Long id,
             @Valid @RequestBody StockDTO stockDTO) {
@@ -72,7 +72,7 @@ public class StockController {
                             schema = @Schema(implementation = Page.class)) })
     })
     @GetMapping
-    @Cacheable(value = "stocks")
+   // @Cacheable(value = "stocks")
     public ResponseEntity<PagedModel<EntityModel<StockDTO>>> getAllStocks(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
@@ -90,7 +90,7 @@ public class StockController {
             @ApiResponse(responseCode = "404", description = "Stock not found", content = @Content)
     })
     @GetMapping("/{id}")
-    @Cacheable(value = "stocks", key = "#id")
+  //  @Cacheable(value = "stocks", key = "#id")
     public ResponseEntity<StockDTO> getStockById(
             @PathVariable Long id) {
         StockDTO stock = stockService.getStockById(id);
@@ -103,7 +103,7 @@ public class StockController {
             @ApiResponse(responseCode = "404", description = "Stock not found", content = @Content)
     })
     @DeleteMapping("/{id}")
-    @CacheEvict(value = "stocks", allEntries = true)
+  //  @CacheEvict(value = "stocks", allEntries = true)
     public ResponseEntity<Void> deleteStock(
             @PathVariable Long id) {
         stockService.deleteStock(id);
