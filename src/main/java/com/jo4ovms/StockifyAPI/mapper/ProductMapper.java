@@ -9,8 +9,10 @@ import org.mapstruct.Mapping;
 public interface ProductMapper {
 
     @Mapping(source = "supplier.name", target = "supplierName")
-    @Mapping(source = "stock.quantity", target = "quantity")
+    @Mapping(source = "supplier.id", target = "supplierId")
+    @Mapping(source = "quantity", target = "quantity")
     ProductDTO toProductDTO(Product product);
 
+    @Mapping(source = "supplierId", target = "supplier.id")
     Product toProduct(ProductDTO productDTO);
 }
