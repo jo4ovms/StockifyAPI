@@ -25,4 +25,7 @@ public class StockDTO {
     private Long productId;
 
     private String productName;
+
+    private Long supplierId;
+    private String supplierName;
 }

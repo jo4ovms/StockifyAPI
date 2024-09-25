@@ -9,6 +9,9 @@ import org.mapstruct.Mapping;
 public interface StockMapper {
 
     @Mapping(source = "product.name", target = "productName")
+    @Mapping(source = "product.id", target = "productId")
+    @Mapping(source = "product.supplier.name", target = "supplierName")
+    @Mapping(source = "product.supplier.id", target = "supplierId")
     StockDTO toStockDTO(Stock stock);
 
     Stock toStock(StockDTO stockDTO);
