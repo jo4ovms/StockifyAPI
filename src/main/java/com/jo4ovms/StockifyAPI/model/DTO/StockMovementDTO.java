@@ -1,5 +1,6 @@
 package com.jo4ovms.StockifyAPI.model.DTO;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.jo4ovms.StockifyAPI.model.StockMovement;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -24,6 +25,7 @@ public class StockMovementDTO {
     @NotNull(message = "Movement type is required.")
     private StockMovement.MovementType movementType;
 
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime movementDate;
 
     @NotBlank(message = "Product name cannot be blank.")
