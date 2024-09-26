@@ -34,6 +34,23 @@ public class ProductController {
         this.pagedResourcesAssembler = pagedResourcesAssembler;
     }
 
+    @Operation(summary = "Search products by name", description = "Retrieve a paginated list of products that match the search term.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Products retrieved",
+                    content = { @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = PagedModel.class)) })
+    })
+    @GetMapping("/search")
+    public ResponseEntity<PagedModel<EntityModel<ProductDTO>>> searchProductsByName(
+            @RequestParam String searchTerm,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        Page<ProductDTO> products = productService.searchProductsByName(searchTerm, page, size);
+        PagedModel<EntityModel<ProductDTO>> pagedModel = pagedResourcesAssembler.toModel(products);
+        return ResponseEntity.ok(pagedModel);
+    }
+
     @Operation(summary = "Create a new product", description = "Create a new product and return the created product's details.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Product created",
@@ -76,10 +93,9 @@ public class ProductController {
     @GetMapping
     public ResponseEntity<PagedModel<EntityModel<ProductDTO>>> getAllProducts(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) String nameFilter) {
+            @RequestParam(defaultValue = "10") int size) {
 
-        Page<ProductDTO> products = productService.findAllProducts(page, size, nameFilter);
+        Page<ProductDTO> products = productService.findAllProducts(page, size);
         PagedModel<EntityModel<ProductDTO>> pagedModel = pagedResourcesAssembler.toModel(products);
         return ResponseEntity.ok(pagedModel);
     }

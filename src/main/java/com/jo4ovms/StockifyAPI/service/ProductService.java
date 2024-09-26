@@ -64,21 +64,26 @@ public class ProductService {
         return productMapper.toProductDTO(updatedProduct);
     }
 
-   // @Cacheable(value = "products")
-    public Page<ProductDTO> findAllProducts(int page, int size, String nameFilter) {
+    public Page<ProductDTO> searchProductsByName(String searchTerm, int page, int size) {
         if (page < 0 || size <= 0) {
             throw new IllegalArgumentException("Page number or size must not be less than zero.");
         }
 
         Pageable pageable = PageRequest.of(page, size);
-        Page<Product> products;
+        Page<Product> products = productRepository.findByNameContainingIgnoreCase(searchTerm, pageable);
 
-        if (nameFilter != null && !nameFilter.isEmpty()) {
+        return products.map(productMapper::toProductDTO);
+    }
 
-            products = productRepository.findByNameContainingIgnoreCase(nameFilter, pageable);
-        } else {
-            products = productRepository.findAll(pageable);
+
+    // @Cacheable(value = "products")
+    public Page<ProductDTO> findAllProducts(int page, int size) {
+        if (page < 0 || size <= 0) {
+            throw new IllegalArgumentException("Page number or size must not be less than zero.");
         }
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Product> products = productRepository.findAll(pageable);
 
         return products.map(productMapper::toProductDTO);
     }
