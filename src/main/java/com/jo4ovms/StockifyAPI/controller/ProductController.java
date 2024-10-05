@@ -140,4 +140,22 @@ public class ProductController {
 
         return ResponseEntity.ok(pagedModel);
     }
+
+    @Operation(summary = "Search products by supplier", description = "Retrieve a paginated list of products from a specific supplier that match the search term.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Products retrieved",
+                    content = { @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = PagedModel.class)) })
+    })
+    @GetMapping("/supplier/{supplierId}/search")
+    public ResponseEntity<PagedModel<EntityModel<ProductDTO>>> searchProductsBySupplier(
+            @PathVariable Long supplierId,
+            @RequestParam String searchTerm,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        Page<ProductDTO> products = productService.searchProductsBySupplier(supplierId, searchTerm, page, size);
+        PagedModel<EntityModel<ProductDTO>> pagedModel = pagedResourcesAssembler.toModel(products);
+        return ResponseEntity.ok(pagedModel);
+    }
 }

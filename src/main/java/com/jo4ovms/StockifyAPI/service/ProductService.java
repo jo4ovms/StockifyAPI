@@ -113,4 +113,17 @@ public class ProductService {
 
        return products.map(productMapper::toProductDTO);
    }
+
+    public Page<ProductDTO> searchProductsBySupplier(Long supplierId, String searchTerm, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+
+
+        Supplier supplier = supplierRepository.findById(supplierId)
+                .orElseThrow(() -> new ResourceNotFoundException("Supplier with id " + supplierId + " not found"));
+
+
+        Page<Product> products = productRepository.findBySupplierAndNameContainingIgnoreCase(supplier, searchTerm, pageable);
+
+        return products.map(productMapper::toProductDTO);
+    }
 }
