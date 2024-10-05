@@ -119,4 +119,22 @@ public class SupplierController {
         PagedModel<EntityModel<SupplierDTO>> pagedModel = pagedResourcesAssembler.toModel(suppliers);
         return ResponseEntity.ok(pagedModel);
     }
+
+    @GetMapping("/filter")
+    public ResponseEntity<PagedModel<EntityModel<SupplierDTO>>> filterSuppliers(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String productType,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        Page<SupplierDTO> suppliers = supplierService.filterSuppliers(name, productType, page, size);
+        PagedModel<EntityModel<SupplierDTO>> pagedModel = pagedResourcesAssembler.toModel(suppliers);
+        return ResponseEntity.ok(pagedModel);
+    }
+
+    @GetMapping("/product-types")
+    public ResponseEntity<List<String>> getAllProductTypes() {
+        List<String> productTypes = supplierService.findAllProductTypes();
+        return ResponseEntity.ok(productTypes);
+    }
 }

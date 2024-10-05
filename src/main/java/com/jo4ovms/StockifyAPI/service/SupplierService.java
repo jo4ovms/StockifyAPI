@@ -27,6 +27,8 @@ public class SupplierService {
     @Autowired
     private SupplierRepository supplierRepository;
 
+
+
     @Autowired
     private SupplierMapper supplierMapper;
 
@@ -84,5 +86,35 @@ public class SupplierService {
        }
        return suppliers.map(supplierMapper::toSupplierDTO);
    }
+
+    public Page<SupplierDTO> filterSuppliers(String name, String productType, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+
+
+        if (name != null && !name.isEmpty() && productType != null && !productType.isEmpty()) {
+            return supplierRepository.findByNameContainingIgnoreCaseAndProductType(name, productType, pageable)
+                    .map(supplierMapper::toSupplierDTO);
+        }
+
+        else if (name != null && !name.isEmpty()) {
+            return supplierRepository.findByNameContainingIgnoreCase(name, pageable)
+                    .map(supplierMapper::toSupplierDTO);
+        }
+
+        else if (productType != null && !productType.isEmpty()) {
+            return supplierRepository.findByProductType(productType, pageable)
+                    .map(supplierMapper::toSupplierDTO);
+        }
+
+        else {
+            return supplierRepository.findAll(pageable).map(supplierMapper::toSupplierDTO);
+        }
+    }
+
+    public List<String> findAllProductTypes() {
+        return supplierRepository.findDistinctProductTypes();
+    }
+
+
 }
 
