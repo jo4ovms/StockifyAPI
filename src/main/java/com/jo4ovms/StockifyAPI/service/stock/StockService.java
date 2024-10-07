@@ -75,4 +75,9 @@ public class StockService {
        stockRepository.delete(stock);
         stockRepository.flush();
    }
+
+    public Page<StockDTO> getStocksBySupplier(Long supplierId, Pageable pageable) {
+        return stockRepository.findByProductSupplierId(supplierId, pageable)
+                .map(stockMapper::toStockDTO);
+    }
 }

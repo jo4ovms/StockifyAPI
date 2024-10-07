@@ -20,5 +20,6 @@ public interface StockRepository extends JpaRepository<Stock, Long> {
     List<Stock> findByQuantityLessThan(int threshold);
     @Query("SELECT sm FROM StockMovement sm WHERE sm.movementDate BETWEEN :startDate AND :endDate")
     Page<StockMovement> findStockMovementsByDateRange(LocalDate startDate, LocalDate endDate, Pageable pageable);
+    Page<Stock> findByProductSupplierId(Long supplierId, Pageable pageable);
 
 }

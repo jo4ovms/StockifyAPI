@@ -12,6 +12,7 @@ import jakarta.validation.Valid;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.PagedModel;
 import org.springframework.data.web.PagedResourcesAssembler;
@@ -108,5 +109,16 @@ public class StockController {
             @PathVariable Long id) {
         stockService.deleteStock(id);
         return ResponseEntity.noContent().build();
+    }
+    @GetMapping("/by-supplier")
+    public ResponseEntity<PagedModel<EntityModel<StockDTO>>> getStocksBySupplier(
+            @RequestParam("supplierId") Long supplierId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<StockDTO> stocks = stockService.getStocksBySupplier(supplierId, pageable);
+        PagedModel<EntityModel<StockDTO>> pagedModel = pagedResourcesAssembler.toModel(stocks);
+        return ResponseEntity.ok(pagedModel);
     }
 }

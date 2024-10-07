@@ -116,5 +116,8 @@ public class SupplierService {
     }
 
 
+    public List<SupplierDTO> findAll() {
+        return supplierRepository.findAll().stream().map(supplierMapper::toSupplierDTO).toList();
+    }
 }
 

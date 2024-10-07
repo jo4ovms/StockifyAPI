@@ -137,4 +137,9 @@ public class SupplierController {
         List<String> productTypes = supplierService.findAllProductTypes();
         return ResponseEntity.ok(productTypes);
     }
+    @GetMapping("/all")
+    public ResponseEntity<List<SupplierDTO>> getAllSuppliers() {
+        List<SupplierDTO> suppliers = supplierService.findAll();
+        return ResponseEntity.ok(suppliers);
+    }
 }
