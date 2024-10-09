@@ -121,4 +121,21 @@ public class StockController {
         PagedModel<EntityModel<StockDTO>> pagedModel = pagedResourcesAssembler.toModel(stocks);
         return ResponseEntity.ok(pagedModel);
     }
+
+    @Operation(summary = "Search stocks", description = "Search stocks by product name or supplier.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Stocks retrieved successfully",
+                    content = { @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = Page.class)) })
+    })
+    @GetMapping("/search")
+    public ResponseEntity<PagedModel<EntityModel<StockDTO>>> searchStocks(
+            @RequestParam(value = "query", required = false) String query,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        PageRequest pageable = PageRequest.of(page, size);
+        Page<StockDTO> stocks = stockService.searchStocks(query, pageable);
+        PagedModel<EntityModel<StockDTO>> pagedModel = pagedResourcesAssembler.toModel(stocks);
+        return ResponseEntity.ok(pagedModel);
+    }
 }

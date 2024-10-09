@@ -80,4 +80,12 @@ public class StockService {
         return stockRepository.findByProductSupplierId(supplierId, pageable)
                 .map(stockMapper::toStockDTO);
     }
+
+    public Page<StockDTO> searchStocks(String query, Pageable pageable) {
+        if (query == null || query.isEmpty()) {
+            return stockRepository.findAll(pageable).map(stockMapper::toStockDTO);
+        }
+        return stockRepository.searchByProductNameOrSupplier(query, pageable)
+                .map(stockMapper::toStockDTO);
+    }
 }
