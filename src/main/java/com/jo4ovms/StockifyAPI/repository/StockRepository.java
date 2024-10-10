@@ -75,6 +75,8 @@ public interface StockRepository extends JpaRepository<Stock, Long> {
             @Param("minValue") double minValue,
             @Param("maxValue") double maxValue,
             Pageable pageable);
+
+    List<Stock> findByQuantityEquals(int quantity);
 }
 
 

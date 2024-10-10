@@ -35,42 +35,59 @@ public class StockService {
     private StockMapper stockMapper;
 
    // @CacheEvict(value = "stocks", allEntries = true)
-    public StockDTO createStock(StockDTO stockDTO) {
-        Product product = productRepository.findById(stockDTO.getProductId())
-                .orElseThrow(() -> new ResourceNotFoundException("Product with id " + stockDTO.getProductId() + " not found"));
+   public StockDTO createStock(StockDTO stockDTO) {
+       Product product = productRepository.findById(stockDTO.getProductId())
+               .orElseThrow(() -> new ResourceNotFoundException("Product with id " + stockDTO.getProductId() + " not found"));
 
-        Stock stock = stockMapper.toStock(stockDTO);
-        stock.setProduct(product);
-        Stock savedStock = stockRepository.save(stock);
-        return stockMapper.toStockDTO(savedStock);
-    }
+       Stock stock = stockMapper.toStock(stockDTO);
+       stock.setProduct(product);
+
+
+       stock.setAvailable(stockDTO.getQuantity() > 0);
+
+       Stock savedStock = stockRepository.save(stock);
+
+       return stockMapper.toStockDTO(savedStock);
+   }
 
    // @CacheEvict(value = "stocks", allEntries = true)
-    public StockDTO updateStock(Long id, StockDTO stockDTO) {
-        Stock stock = stockRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Stock with id " + id + " not found"));
+   public StockDTO updateStock(Long id, StockDTO stockDTO) {
+       Stock stock = stockRepository.findById(id)
+               .orElseThrow(() -> new ResourceNotFoundException("Stock with id " + id + " not found"));
 
-        Product product = productRepository.findById(stockDTO.getProductId())
-                .orElseThrow(() -> new ResourceNotFoundException("Product with id " + stockDTO.getProductId() + " not found"));
+       Product product = productRepository.findById(stockDTO.getProductId())
+               .orElseThrow(() -> new ResourceNotFoundException("Product with id " + stockDTO.getProductId() + " not found"));
 
-        stock.setQuantity(stockDTO.getQuantity());
-        stock.setValue(stockDTO.getValue());
-        stock.setProduct(product);
+       stock.setQuantity(stockDTO.getQuantity());
+       stock.setValue(stockDTO.getValue());
+       stock.setProduct(product);
 
-        Stock updatedStock = stockRepository.save(stock);
-        return stockMapper.toStockDTO(updatedStock);
-    }
+
+       stock.setAvailable(stockDTO.getQuantity() > 0);
+
+       Stock updatedStock = stockRepository.save(stock);
+
+       return stockMapper.toStockDTO(updatedStock);
+   }
 
     public Page<StockDTO> getAllStocks(Pageable pageable) {
-        return stockRepository.findAll(pageable).map(stockMapper::toStockDTO);
+        return stockRepository.findAll(pageable).map(stock -> {
+            StockDTO stockDTO = stockMapper.toStockDTO(stock);
+            stockDTO.setAvailable(stockDTO.getQuantity() > 0); // Set available based on quantity
+            return stockDTO;
+        });
     }
 
    // @Cacheable(value = "stocks", key = "#id")
-    public StockDTO getStockById(Long id) {
-        Stock stock = stockRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Stock with id " + id + " not found"));
-        return stockMapper.toStockDTO(stock);
-    }
+   public StockDTO getStockById(Long id) {
+       Stock stock = stockRepository.findById(id)
+               .orElseThrow(() -> new ResourceNotFoundException("Stock with id " + id + " not found"));
+
+       StockDTO stockDTO = stockMapper.toStockDTO(stock);
+       stockDTO.setAvailable(stockDTO.getQuantity() > 0);
+
+       return stockDTO;
+   }
 
    // @CacheEvict(value = "stocks", allEntries = true)
     @Transactional

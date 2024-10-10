@@ -115,4 +115,27 @@ public class StockReportController {
 
         return ResponseEntity.ok(pagedModel);
     }
+
+    @Operation(summary = "Generate out of stock report", description = "Generate a report for products that are out of stock.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Report generated",
+                    content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "400", description = "Invalid input")
+    })
+    @GetMapping("/out-of-stock")
+    public ResponseEntity<Map<String, Object>> generateOutOfStockReport() {
+        List<StockDTO> report = stockReportService.getOutOfStockProducts();
+
+        if (report.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("message", "No products are currently out of stock."));
+        }
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("reportDate", LocalDate.now());
+        response.put("totalProducts", report.size());
+        response.put("products", report);
+
+        return ResponseEntity.ok(response);
+    }
 }

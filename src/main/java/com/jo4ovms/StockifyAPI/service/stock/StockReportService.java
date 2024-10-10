@@ -52,4 +52,11 @@ public class StockReportService {
                 .map(stockMapper::toStockDTO)
                 .toList();
     }
+    public List<StockDTO> getOutOfStockProducts() {
+        List<Stock> outOfStockProducts = stockRepository.findByQuantityEquals(0);
+        return outOfStockProducts.stream()
+                .map(stockMapper::toStockDTO)
+                .toList();
+    }
+
 }
