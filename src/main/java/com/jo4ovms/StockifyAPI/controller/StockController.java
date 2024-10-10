@@ -82,12 +82,12 @@ public class StockController {
             @RequestParam(required = false) Integer minQuantity,
             @RequestParam(required = false) Integer maxQuantity,
             @RequestParam(required = false) Double minValue,
-            @RequestParam(required = false) Double maxValue) {
-
+            @RequestParam(required = false) Double maxValue,
+            @RequestParam(required = false) String query,
+            @RequestParam(required = false) Long supplierId) {
 
         Object maxQuantityFromBackend = stockService.getMaxQuantity();
         Object maxValueFromBackend = stockService.getMaxValue();
-
 
         int minQty = (minQuantity != null) ? minQuantity : 0;
         int maxQty = (maxQuantity != null) ? maxQuantity : (Integer) maxQuantityFromBackend;
@@ -97,7 +97,7 @@ public class StockController {
         PageRequest pageable = PageRequest.of(page, size);
 
 
-        Page<StockDTO> stocks = stockService.getFilteredStocks(minQty, maxQty, minVal, maxVal, pageable);
+        Page<StockDTO> stocks = stockService.getFilteredStocks(query, supplierId, minQty, maxQty, minVal, maxVal, pageable);
 
         PagedModel<EntityModel<StockDTO>> pagedModel = pagedResourcesAssembler.toModel(stocks);
         return ResponseEntity.ok(pagedModel);
@@ -159,26 +159,34 @@ public class StockController {
         return ResponseEntity.ok(pagedModel);
     }
 
-    @Operation(summary = "Retrieve filtered stocks", description = "Retrieve a paginated list of stocks filtered by quantity and value.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Filtered stocks retrieved successfully",
-                    content = { @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = Page.class)) })
-    })
+    @Operation(summary = "Retrieve filtered stocks", description = "Retrieve a paginated list of stocks filtered by product name, supplier, quantity, and value.")
     @GetMapping("/filtered")
     public ResponseEntity<PagedModel<EntityModel<StockDTO>>> getFilteredStocks(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "0") int minQuantity,
-            @RequestParam(defaultValue = "100") int maxQuantity,
-            @RequestParam(defaultValue = "0") double minValue,
-            @RequestParam(defaultValue = "10000") double maxValue) {
+            @RequestParam(required = false) String query,
+            @RequestParam(required = false) Long supplierId,
+            @RequestParam(required = false) Integer minQuantity,
+            @RequestParam(required = false) Integer maxQuantity,
+            @RequestParam(required = false) Double minValue,
+            @RequestParam(required = false) Double maxValue) {
 
-        PageRequest pageable = PageRequest.of(page, size);
-        Page<StockDTO> filteredStocks = stockService.getFilteredStocks(minQuantity, maxQuantity, minValue, maxValue, pageable);
+
+        int maxQty = (maxQuantity != null) ? maxQuantity : (Integer) stockService.getMaxQuantity();
+        double maxVal = (maxValue != null) ? maxValue : (Double) stockService.getMaxValue();
+        int minQty = (minQuantity != null) ? minQuantity : 0;
+        double minVal = (minValue != null) ? minValue : 0.0;
+
+
+        Pageable pageable = PageRequest.of(page, size);
+
+
+        Page<StockDTO> filteredStocks = stockService.getFilteredStocks(query, supplierId, minQty, maxQty, minVal, maxVal, pageable);
+
         PagedModel<EntityModel<StockDTO>> pagedModel = pagedResourcesAssembler.toModel(filteredStocks);
         return ResponseEntity.ok(pagedModel);
     }
+
 
     @Operation(summary = "Get min/max values for stock", description = "Retrieve minimum and maximum quantity and value in the stock")
     @GetMapping("/limits")
@@ -188,11 +196,11 @@ public class StockController {
 
         Map<String, Object> response = new HashMap<>();
 
-        response.put("minQuantity", 0); // O valor mínimo é sempre 0
-        response.put("maxQuantity", maxQuantity); // O maior valor de quantidade
+        response.put("minQuantity", 0);
+        response.put("maxQuantity", maxQuantity);
 
-        response.put("minValue", 0); // O valor mínimo é sempre 0
-        response.put("maxValue", maxValue); // O maior valor de produtos
+        response.put("minValue", 0);
+        response.put("maxValue", maxValue);
 
         return ResponseEntity.ok(response);
     }

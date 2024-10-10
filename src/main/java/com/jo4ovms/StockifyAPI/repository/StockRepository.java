@@ -37,6 +37,44 @@ public interface StockRepository extends JpaRepository<Stock, Long> {
 
     @Query("SELECT MAX(s.value) FROM Stock s")
     Object findMaxValue();
+
+
+    @Query("SELECT s FROM Stock s WHERE " +
+            "(:supplierId IS NULL OR s.product.supplier.id = :supplierId) AND " +
+            "s.quantity BETWEEN :minQuantity AND :maxQuantity AND " +
+            "s.value BETWEEN :minValue AND :maxValue")
+    Page<Stock> findBySupplierAndQuantityAndValue(
+            @Param("supplierId") Long supplierId,
+            @Param("minQuantity") int minQuantity,
+            @Param("maxQuantity") int maxQuantity,
+            @Param("minValue") double minValue,
+            @Param("maxValue") double maxValue,
+            Pageable pageable);
+
+    @Query("SELECT s FROM Stock s WHERE " +
+            "(:query IS NULL OR LOWER(s.product.name) LIKE LOWER(CONCAT('%', :query, '%'))) AND " +
+            "s.quantity BETWEEN :minQuantity AND :maxQuantity AND " +
+            "s.value BETWEEN :minValue AND :maxValue")
+    Page<Stock> searchByProductNameAndQuantityAndValue(
+            @Param("query") String query,
+            @Param("minQuantity") int minQuantity,
+            @Param("maxQuantity") int maxQuantity,
+            @Param("minValue") double minValue,
+            @Param("maxValue") double maxValue,
+            Pageable pageable);
+    @Query("SELECT s FROM Stock s WHERE " +
+            "(:query IS NULL OR LOWER(s.product.name) LIKE LOWER(CONCAT('%', :query, '%'))) AND " +
+            "(:supplierId IS NULL OR s.product.supplier.id = :supplierId) AND " +
+            "s.quantity BETWEEN :minQuantity AND :maxQuantity AND " +
+            "s.value BETWEEN :minValue AND :maxValue")
+    Page<Stock> searchByProductNameAndSupplierAndQuantityAndValue(
+            @Param("query") String query,
+            @Param("supplierId") Long supplierId,
+            @Param("minQuantity") int minQuantity,
+            @Param("maxQuantity") int maxQuantity,
+            @Param("minValue") double minValue,
+            @Param("maxValue") double maxValue,
+            Pageable pageable);
 }
 
 
