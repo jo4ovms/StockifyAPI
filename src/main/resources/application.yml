@@ -1,4 +1,6 @@
 spring:
+    codec:
+        max-in-memory-size: 10MB
     datasource:
         url: jdbc:postgresql://localhost:5432/stockify_management_db
         username: admin
