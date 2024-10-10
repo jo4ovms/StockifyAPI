@@ -69,19 +69,36 @@ public class StockController {
     }
 
 
-    @Operation(summary = "Retrieve all stocks", description = "Retrieve a paginated list of all stock entries.")
+    @Operation(summary = "Retrieve all stocks", description = "Retrieve a paginated list of all stock entries, with optional filtering by quantity and value.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Stocks retrieved successfully",
                     content = { @Content(mediaType = "application/json",
                             schema = @Schema(implementation = Page.class)) })
     })
     @GetMapping
-   // @Cacheable(value = "stocks")
     public ResponseEntity<PagedModel<EntityModel<StockDTO>>> getAllStocks(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) Integer minQuantity,
+            @RequestParam(required = false) Integer maxQuantity,
+            @RequestParam(required = false) Double minValue,
+            @RequestParam(required = false) Double maxValue) {
+
+
+        Object maxQuantityFromBackend = stockService.getMaxQuantity();
+        Object maxValueFromBackend = stockService.getMaxValue();
+
+
+        int minQty = (minQuantity != null) ? minQuantity : 0;
+        int maxQty = (maxQuantity != null) ? maxQuantity : (Integer) maxQuantityFromBackend;
+        double minVal = (minValue != null) ? minValue : 0.0;
+        double maxVal = (maxValue != null) ? maxValue : (Double) maxValueFromBackend;
+
         PageRequest pageable = PageRequest.of(page, size);
-        Page<StockDTO> stocks = stockService.getAllStocks(pageable);
+
+
+        Page<StockDTO> stocks = stockService.getFilteredStocks(minQty, maxQty, minVal, maxVal, pageable);
+
         PagedModel<EntityModel<StockDTO>> pagedModel = pagedResourcesAssembler.toModel(stocks);
         return ResponseEntity.ok(pagedModel);
     }
@@ -166,16 +183,19 @@ public class StockController {
     @Operation(summary = "Get min/max values for stock", description = "Retrieve minimum and maximum quantity and value in the stock")
     @GetMapping("/limits")
     public ResponseEntity<Map<String, Object>> getMinMaxLimits() {
-        Object[] minMaxQuantity = stockService.getMinMaxQuantity();
-        Object[] minMaxValue = stockService.getMinMaxValue();
+        Object maxQuantity = stockService.getMaxQuantity();
+        Object maxValue = stockService.getMaxValue();
 
         Map<String, Object> response = new HashMap<>();
-        response.put("minQuantity", minMaxQuantity[0]);
-        response.put("maxQuantity", minMaxQuantity[1]);
-        response.put("minValue", minMaxValue[0]);
-        response.put("maxValue", minMaxValue[1]);
+
+        response.put("minQuantity", 0); // O valor mínimo é sempre 0
+        response.put("maxQuantity", maxQuantity); // O maior valor de quantidade
+
+        response.put("minValue", 0); // O valor mínimo é sempre 0
+        response.put("maxValue", maxValue); // O maior valor de produtos
 
         return ResponseEntity.ok(response);
     }
+
 
 }

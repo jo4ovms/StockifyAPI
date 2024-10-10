@@ -32,12 +32,11 @@ public interface StockRepository extends JpaRepository<Stock, Long> {
                                             @Param("minValue") double minValue,
                                             @Param("maxValue") double maxValue,
                                             Pageable pageable);
-@Query("SELECT MIN(s.quantity), MAX(s.quantity) FROM Stock s")
-Object[] findMinMaxQuantity();
+    @Query("SELECT MAX(s.quantity) FROM Stock s")
+    Object findMaxQuantity();
 
-// Query para obter o valor mínimo e máximo de valor no estoque
-@Query("SELECT MIN(s.value), MAX(s.value) FROM Stock s")
-Object[] findMinMaxValue();
+    @Query("SELECT MAX(s.value) FROM Stock s")
+    Object findMaxValue();
 }
 
 

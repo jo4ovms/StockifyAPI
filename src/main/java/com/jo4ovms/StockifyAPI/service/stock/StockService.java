@@ -13,7 +13,11 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+
+import java.util.HashMap;
+import java.util.Map;
 
 
 @Service
@@ -94,11 +98,12 @@ public class StockService {
                 .map(stockMapper::toStockDTO);
     }
 
-    public Object[] getMinMaxQuantity() {
-        return stockRepository.findMinMaxQuantity();
+    public Object getMaxQuantity() {
+        return stockRepository.findMaxQuantity();
     }
 
-    public Object[] getMinMaxValue() {
-        return stockRepository.findMinMaxValue();
+    public Object getMaxValue() {
+        return stockRepository.findMaxValue();
     }
+
 }
