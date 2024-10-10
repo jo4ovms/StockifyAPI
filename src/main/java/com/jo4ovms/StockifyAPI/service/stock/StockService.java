@@ -88,4 +88,17 @@ public class StockService {
         return stockRepository.searchByProductNameOrSupplier(query, pageable)
                 .map(stockMapper::toStockDTO);
     }
+
+    public Page<StockDTO> getFilteredStocks(int minQuantity, int maxQuantity, double minValue, double maxValue, Pageable pageable) {
+        return stockRepository.findByQuantityAndValueRange(minQuantity, maxQuantity, minValue, maxValue, pageable)
+                .map(stockMapper::toStockDTO);
+    }
+
+    public Object[] getMinMaxQuantity() {
+        return stockRepository.findMinMaxQuantity();
+    }
+
+    public Object[] getMinMaxValue() {
+        return stockRepository.findMinMaxValue();
+    }
 }

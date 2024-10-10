@@ -21,6 +21,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
+import java.util.Map;
+
 
 @RestController
 @RequestMapping("/api/stock")
@@ -138,4 +141,41 @@ public class StockController {
         PagedModel<EntityModel<StockDTO>> pagedModel = pagedResourcesAssembler.toModel(stocks);
         return ResponseEntity.ok(pagedModel);
     }
+
+    @Operation(summary = "Retrieve filtered stocks", description = "Retrieve a paginated list of stocks filtered by quantity and value.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Filtered stocks retrieved successfully",
+                    content = { @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = Page.class)) })
+    })
+    @GetMapping("/filtered")
+    public ResponseEntity<PagedModel<EntityModel<StockDTO>>> getFilteredStocks(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "0") int minQuantity,
+            @RequestParam(defaultValue = "100") int maxQuantity,
+            @RequestParam(defaultValue = "0") double minValue,
+            @RequestParam(defaultValue = "10000") double maxValue) {
+
+        PageRequest pageable = PageRequest.of(page, size);
+        Page<StockDTO> filteredStocks = stockService.getFilteredStocks(minQuantity, maxQuantity, minValue, maxValue, pageable);
+        PagedModel<EntityModel<StockDTO>> pagedModel = pagedResourcesAssembler.toModel(filteredStocks);
+        return ResponseEntity.ok(pagedModel);
+    }
+
+    @Operation(summary = "Get min/max values for stock", description = "Retrieve minimum and maximum quantity and value in the stock")
+    @GetMapping("/limits")
+    public ResponseEntity<Map<String, Object>> getMinMaxLimits() {
+        Object[] minMaxQuantity = stockService.getMinMaxQuantity();
+        Object[] minMaxValue = stockService.getMinMaxValue();
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("minQuantity", minMaxQuantity[0]);
+        response.put("maxQuantity", minMaxQuantity[1]);
+        response.put("minValue", minMaxValue[0]);
+        response.put("maxValue", minMaxValue[1]);
+
+        return ResponseEntity.ok(response);
+    }
+
 }
