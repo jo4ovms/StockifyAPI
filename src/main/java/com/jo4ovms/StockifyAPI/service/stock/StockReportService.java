@@ -41,7 +41,7 @@ public class StockReportService {
     }
 
     public Page<StockDTO> generateHighStockReport(int quantity, Pageable pageable) {
-        Page<Stock> highStockProducts = stockRepository.findByQuantityGreaterThan(quantity, pageable);
+        Page<Stock> highStockProducts = stockRepository.findByQuantityGreaterThanEqual(quantity, pageable);
         return highStockProducts.map(stockMapper::toStockDTO);
     }
 
