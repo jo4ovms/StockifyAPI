@@ -45,11 +45,10 @@ public class StockReportService {
         return highStockProducts.map(stockMapper::toStockDTO);
     }
 
-    public List<StockDTO> getOutOfStockProducts() {
-        List<Stock> outOfStockProducts = stockRepository.findByQuantityEquals(0);
-        return outOfStockProducts.stream()
-                .map(stockMapper::toStockDTO)
-                .toList();
+    public Page<StockDTO> getOutOfStockProducts(Pageable pageable) {
+        Page<Stock> outOfStockProducts = stockRepository.findByQuantityEquals(0, pageable);
+        return outOfStockProducts.map(stockMapper::toStockDTO);
     }
+
 
 }
