@@ -18,7 +18,8 @@ import java.util.Optional;
 public interface StockRepository extends JpaRepository<Stock, Long> {
     Optional<Stock> findByProduct(Product product);
     Page<Stock> findByQuantityGreaterThanEqual(int quantity, Pageable pageable);
-    Page<Stock> findByQuantityLessThan(int threshold, Pageable pageable);
+    Page<Stock> findByQuantityBetween(int minQuantity, int maxQuantity, Pageable pageable);
+    Page<Stock> findByQuantityLessThanEqual(int threshold, Pageable pageable);
     @Query("SELECT sm FROM StockMovement sm WHERE sm.movementDate BETWEEN :startDate AND :endDate")
     Page<StockMovement> findStockMovementsByDateRange(LocalDate startDate, LocalDate endDate, Pageable pageable);
     Page<Stock> findByProductSupplierId(Long supplierId, Pageable pageable);

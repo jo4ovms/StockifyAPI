@@ -160,4 +160,38 @@ public class StockReportController {
         return ResponseEntity.ok(pagedModel);
     }
 
+    @Operation(summary = "Generate critical stock report", description = "Generate a report for products with stock below a certain threshold, including products with zero quantity.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Report generated",
+                    content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "400", description = "Invalid input")
+    })
+    @GetMapping("/critical-stock")
+    public ResponseEntity<?> generateCriticalStockReport(
+            @RequestParam int threshold,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        if (threshold <= 0) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", "Threshold must be greater than zero."));
+        }
+
+        PageRequest pageable = PageRequest.of(page, size);
+        Page<StockDTO> report = stockReportService.generateCriticalStockReport(threshold, pageable);
+
+        if (report.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("message", "No products found below the specified threshold."));
+        }
+
+        PagedModel<EntityModel<StockDTO>> pagedModel = stockPagedResourcesAssembler.toModel(report,
+                stockDTO -> EntityModel.of(stockDTO,
+                        WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(StockReportController.class)
+                                        .generateCriticalStockReport(threshold, page, size))
+                                .withSelfRel()));
+
+        return ResponseEntity.ok(pagedModel);
+    }
+
 }

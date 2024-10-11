@@ -20,18 +20,20 @@ import java.util.List;
 @Transactional
 public class StockReportService {
 
-    @Autowired
-    private StockRepository stockRepository;
+    private final StockRepository stockRepository;
+    private final StockMapper stockMapper;
+    private final StockMovementMapper stockMovementMapper;
 
     @Autowired
-    private StockMapper stockMapper;
-
-    @Autowired
-    private StockMovementMapper stockMovementMapper;
+    public StockReportService(StockRepository stockRepository, StockMapper stockMapper, StockMovementMapper stockMovementMapper) {
+        this.stockRepository = stockRepository;
+        this.stockMapper = stockMapper;
+        this.stockMovementMapper = stockMovementMapper;
+    }
 
 
     public Page<StockDTO> generateLowStockReport(int threshold, Pageable pageable) {
-        Page<Stock> lowStockProducts = stockRepository.findByQuantityLessThan(threshold, pageable);
+        Page<Stock> lowStockProducts = stockRepository.findByQuantityBetween(1, threshold - 1, pageable);
         return lowStockProducts.map(stockMapper::toStockDTO);
     }
 
@@ -43,6 +45,11 @@ public class StockReportService {
     public Page<StockDTO> generateHighStockReport(int quantity, Pageable pageable) {
         Page<Stock> highStockProducts = stockRepository.findByQuantityGreaterThanEqual(quantity, pageable);
         return highStockProducts.map(stockMapper::toStockDTO);
+    }
+
+    public Page<StockDTO> generateCriticalStockReport(int threshold, Pageable pageable) {
+        Page<Stock> criticalStockProducts = stockRepository.findByQuantityLessThanEqual(threshold, pageable);
+        return criticalStockProducts.map(stockMapper::toStockDTO);
     }
 
     public Page<StockDTO> getOutOfStockProducts(Pageable pageable) {
