@@ -30,28 +30,21 @@ public class StockReportService {
     private StockMovementMapper stockMovementMapper;
 
 
-   // @Cacheable(value = "lowStockReport", key = "#threshold")
-    public List<StockDTO> generateLowStockReport(int threshold) {
-        List<Stock> lowStockProducts = stockRepository.findByQuantityLessThan(threshold);
-        return lowStockProducts.stream()
-                .map(stockMapper::toStockDTO)
-                .toList();
+    public Page<StockDTO> generateLowStockReport(int threshold, Pageable pageable) {
+        Page<Stock> lowStockProducts = stockRepository.findByQuantityLessThan(threshold, pageable);
+        return lowStockProducts.map(stockMapper::toStockDTO);
     }
 
-   // @Cacheable(value = "stockMovementReport", key = "#startDate.toString() + '-' + #endDate.toString()")
     public Page<StockMovementDTO> generateStockMovementReport(LocalDate startDate, LocalDate endDate, Pageable pageable) {
         return stockRepository.findStockMovementsByDateRange(startDate, endDate, pageable)
                 .map(stockMovementMapper::toStockMovementDTO);
     }
 
-
-    //@Cacheable(value = "highStockReport", key = "#quantity")
-    public List<StockDTO> generateHighStockReport(int quantity) {
-        List<Stock> highStockProducts = stockRepository.findByQuantityGreaterThan(quantity);
-        return highStockProducts.stream()
-                .map(stockMapper::toStockDTO)
-                .toList();
+    public Page<StockDTO> generateHighStockReport(int quantity, Pageable pageable) {
+        Page<Stock> highStockProducts = stockRepository.findByQuantityGreaterThan(quantity, pageable);
+        return highStockProducts.map(stockMapper::toStockDTO);
     }
+
     public List<StockDTO> getOutOfStockProducts() {
         List<Stock> outOfStockProducts = stockRepository.findByQuantityEquals(0);
         return outOfStockProducts.stream()
