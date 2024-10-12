@@ -10,7 +10,9 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -47,9 +49,21 @@ public class StockReportService {
         return highStockProducts.map(stockMapper::toStockDTO);
     }
 
-    public Page<StockDTO> generateCriticalStockReport(int threshold, Pageable pageable) {
-        Page<Stock> criticalStockProducts = stockRepository.findByQuantityLessThanEqual(threshold, pageable);
-        return criticalStockProducts.map(stockMapper::toStockDTO);
+    public Page<StockDTO> getFilteredCriticalStock(String query, Long supplierId, int threshold, String sortBy, String sortDirection, Pageable pageable) {
+
+        Sort.Direction direction = sortDirection.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+
+
+        PageRequest pageRequest;
+        if (sortBy.equals("supplier")) {
+            pageRequest = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(direction, "product.supplier.name"));
+        } else {
+            pageRequest = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(direction, "quantity"));
+        }
+
+
+        return stockRepository.searchCriticalStockByFilters(query, supplierId, threshold, pageRequest)
+                .map(stockMapper::toStockDTO);
     }
 
     public Page<StockDTO> getOutOfStockProducts(Pageable pageable) {

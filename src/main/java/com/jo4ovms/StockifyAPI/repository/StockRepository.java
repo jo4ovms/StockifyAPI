@@ -11,7 +11,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
-import java.util.List;
+
 import java.util.Optional;
 
 @Repository
@@ -79,6 +79,17 @@ public interface StockRepository extends JpaRepository<Stock, Long> {
 
     Page<Stock> findByQuantityEquals(int quantity, Pageable pageable);
 
+
+
+    @Query("SELECT s FROM Stock s WHERE " +
+            "(:query IS NULL OR LOWER(s.product.name) LIKE LOWER(CONCAT('%', :query, '%'))) AND " +
+            "(:supplierId IS NULL OR s.product.supplier.id = :supplierId) AND " +
+            "s.quantity <= :threshold")
+    Page<Stock> searchCriticalStockByFilters(
+            @Param("query") String query,
+            @Param("supplierId") Long supplierId,
+            @Param("threshold") int threshold,
+            Pageable pageable);
 }
 
 
