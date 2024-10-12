@@ -1,4 +1,27 @@
+
 services:
+  zookeeper:
+    image: 'bitnami/zookeeper:latest'
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+    ports:
+      - '2181:2181'
+    networks:
+      - stockify-network
+
+  kafka:
+    image: 'bitnami/kafka:latest'
+    environment:
+      - KAFKA_BROKER_ID=1
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
+      - KAFKA_LISTENERS=PLAINTEXT://:9092
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092
+      - ALLOW_PLAINTEXT_LISTENER=yes
+    ports:
+      - '9092:9092'
+    networks:
+      - stockify-network
+
   postgres:
     image: postgres:latest
     container_name: postgres-db
@@ -12,7 +35,6 @@ services:
       - ./postgres-data:/var/lib/postgresql/data
     networks:
       - stockify-network
-
 
   pgadmin:
     image: dpage/pgadmin4
