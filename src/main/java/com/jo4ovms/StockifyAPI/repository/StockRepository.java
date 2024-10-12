@@ -1,6 +1,6 @@
 package com.jo4ovms.StockifyAPI.repository;
 
-import com.jo4ovms.StockifyAPI.model.Product;
+
 import com.jo4ovms.StockifyAPI.model.Stock;
 import com.jo4ovms.StockifyAPI.model.StockMovement;
 import org.springframework.data.domain.Page;
@@ -12,14 +12,11 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 
-import java.util.Optional;
+
 
 @Repository
 public interface StockRepository extends JpaRepository<Stock, Long> {
-    Optional<Stock> findByProduct(Product product);
-    Page<Stock> findByQuantityGreaterThanEqual(int quantity, Pageable pageable);
-    Page<Stock> findByQuantityBetween(int minQuantity, int maxQuantity, Pageable pageable);
-    Page<Stock> findByQuantityLessThanEqual(int threshold, Pageable pageable);
+
     @Query("SELECT sm FROM StockMovement sm WHERE sm.movementDate BETWEEN :startDate AND :endDate")
     Page<StockMovement> findStockMovementsByDateRange(LocalDate startDate, LocalDate endDate, Pageable pageable);
     Page<Stock> findByProductSupplierId(Long supplierId, Pageable pageable);
@@ -77,7 +74,6 @@ public interface StockRepository extends JpaRepository<Stock, Long> {
             @Param("maxValue") double maxValue,
             Pageable pageable);
 
-    Page<Stock> findByQuantityEquals(int quantity, Pageable pageable);
 
 
 
@@ -90,6 +86,37 @@ public interface StockRepository extends JpaRepository<Stock, Long> {
             @Param("supplierId") Long supplierId,
             @Param("threshold") int threshold,
             Pageable pageable);
+
+    @Query("SELECT s FROM Stock s WHERE " +
+            "(:query IS NULL OR LOWER(s.product.name) LIKE LOWER(CONCAT('%', :query, '%'))) AND " +
+            "(:supplierId IS NULL OR s.product.supplier.id = :supplierId) AND " +
+            "s.quantity >= :threshold")
+    Page<Stock> searchAdequateStockByFilters(
+            @Param("query") String query,
+            @Param("supplierId") Long supplierId,
+            @Param("threshold") int threshold,
+            Pageable pageable);
+
+    @Query("SELECT s FROM Stock s WHERE " +
+            "(:query IS NULL OR LOWER(s.product.name) LIKE LOWER(CONCAT('%', :query, '%'))) AND " +
+            "(:supplierId IS NULL OR s.product.supplier.id = :supplierId) AND " +
+            "s.quantity BETWEEN :minQuantity AND :maxQuantity")
+    Page<Stock> searchLowStockByFilters(
+            @Param("query") String query,
+            @Param("supplierId") Long supplierId,
+            @Param("minQuantity") int minQuantity,
+            @Param("maxQuantity") int maxQuantity,
+            Pageable pageable);
+
+    @Query("SELECT s FROM Stock s WHERE " +
+            "(:query IS NULL OR LOWER(s.product.name) LIKE LOWER(CONCAT('%', :query, '%'))) AND " +
+            "(:supplierId IS NULL OR s.product.supplier.id = :supplierId) AND " +
+            "s.quantity = 0")
+    Page<Stock> searchOutOfStockByFilters(
+            @Param("query") String query,
+            @Param("supplierId") Long supplierId,
+            Pageable pageable);
+
 }
 
 

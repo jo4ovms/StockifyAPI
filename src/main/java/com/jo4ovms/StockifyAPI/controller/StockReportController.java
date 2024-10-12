@@ -10,7 +10,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.EntityModel;
@@ -50,29 +50,32 @@ public class StockReportController {
             @ApiResponse(responseCode = "400", description = "Invalid input")
     })
     @GetMapping("/low-stock")
-    public ResponseEntity<?> generateLowStockReport(
+    public ResponseEntity<?> getFilteredLowStock(
+            @RequestParam(required = false) String query,
+            @RequestParam(required = false) Long supplierId,
             @RequestParam int threshold,
+            @RequestParam(defaultValue = "quantity") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDirection,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
 
-        if (threshold <= 0) {
+        if (threshold < 0) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", "Threshold must be greater than zero."));
+                    .body(Map.of("error", "Threshold must be greater than or equal to zero."));
         }
 
-        PageRequest pageable = PageRequest.of(page, size);
-        Page<StockDTO> report = stockReportService.generateLowStockReport(threshold, pageable);
+        Sort.Direction direction = sortDirection.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+        PageRequest pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
 
-        if (report.isEmpty()) {
+        Page<StockDTO> filteredStock = stockReportService.getFilteredLowStock(query, supplierId, threshold, sortBy, sortDirection, pageable);
+
+        if (filteredStock.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("message", "No products found below the specified threshold."));
         }
 
-        PagedModel<EntityModel<StockDTO>> pagedModel = stockPagedResourcesAssembler.toModel(report,
-                stockDTO -> EntityModel.of(stockDTO,
-                        WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(StockReportController.class)
-                                        .generateLowStockReport(threshold, page, size))
-                                .withSelfRel()));
+        PagedModel<EntityModel<StockDTO>> pagedModel = stockPagedResourcesAssembler.toModel(filteredStock,
+                stockDTO -> EntityModel.of(stockDTO));
 
         return ResponseEntity.ok(pagedModel);
     }
@@ -83,30 +86,33 @@ public class StockReportController {
                     content = @Content(mediaType = "application/json")),
             @ApiResponse(responseCode = "400", description = "Invalid input")
     })
-    @GetMapping("/high-stock")
-    public ResponseEntity<?> generateHighStockReport(
+    @GetMapping("/adequate-stock")
+    public ResponseEntity<?> getFilteredAdequateStock(
+            @RequestParam(required = false) String query,
+            @RequestParam(required = false) Long supplierId,
             @RequestParam int threshold,
+            @RequestParam(defaultValue = "quantity") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDirection,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
 
-        if (threshold <= 0) {
+        if (threshold < 0) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", "Threshold must be greater than zero."));
+                    .body(Map.of("error", "Threshold must be greater than or equal to zero."));
         }
 
-        PageRequest pageable = PageRequest.of(page, size);
-        Page<StockDTO> report = stockReportService.generateHighStockReport(threshold, pageable);
+        Sort.Direction direction = sortDirection.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+        PageRequest pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
 
-        if (report.isEmpty()) {
+        Page<StockDTO> filteredStock = stockReportService.getFilteredAdequateStock(query, supplierId, threshold, sortBy, sortDirection, pageable);
+
+        if (filteredStock.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("message", "No products found above the specified threshold."));
+                    .body(Map.of("message", "No products found with adequate stock."));
         }
 
-        PagedModel<EntityModel<StockDTO>> pagedModel = stockPagedResourcesAssembler.toModel(report,
-                stockDTO -> EntityModel.of(stockDTO,
-                        WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(StockReportController.class)
-                                        .generateHighStockReport(threshold, page, size))
-                                .withSelfRel()));
+        PagedModel<EntityModel<StockDTO>> pagedModel = stockPagedResourcesAssembler.toModel(filteredStock,
+                stockDTO -> EntityModel.of(stockDTO));
 
         return ResponseEntity.ok(pagedModel);
     }
@@ -142,20 +148,24 @@ public class StockReportController {
             @ApiResponse(responseCode = "400", description = "Invalid input")
     })
     @GetMapping("/out-of-stock")
-    public ResponseEntity<?> generateOutOfStockReport(
+    public ResponseEntity<?> getFilteredOutOfStock(
+            @RequestParam(required = false) String query,
+            @RequestParam(required = false) Long supplierId,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            PagedResourcesAssembler<StockDTO> pagedResourcesAssembler) {
+            @RequestParam(defaultValue = "10") int size) {
 
-        Pageable pageable = PageRequest.of(page, size);
-        Page<StockDTO> report = stockReportService.getOutOfStockProducts(pageable);
+        PageRequest pageable = PageRequest.of(page, size);
 
-        if (report.isEmpty()) {
+        Page<StockDTO> filteredStock = stockReportService.getFilteredOutOfStock(query, supplierId, pageable);
+
+        if (filteredStock.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("message", "No products are currently out of stock."));
+                    .body(Map.of("message", "No products found that are out of stock."));
         }
 
-        PagedModel<EntityModel<StockDTO>> pagedModel = pagedResourcesAssembler.toModel(report);
+        PagedModel<EntityModel<StockDTO>> pagedModel = stockPagedResourcesAssembler.toModel(filteredStock,
+                stockDTO -> EntityModel.of(stockDTO));
+
         return ResponseEntity.ok(pagedModel);
     }
 
