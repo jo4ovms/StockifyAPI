@@ -1,14 +1,18 @@
 package com.jo4ovms.StockifyAPI.service.stock;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jo4ovms.StockifyAPI.exception.ResourceNotFoundException;
 import com.jo4ovms.StockifyAPI.mapper.StockMapper;
+import com.jo4ovms.StockifyAPI.model.DTO.LogDTO;
 import com.jo4ovms.StockifyAPI.model.DTO.StockDTO;
 import com.jo4ovms.StockifyAPI.model.Product;
 import com.jo4ovms.StockifyAPI.model.Stock;
 import com.jo4ovms.StockifyAPI.repository.ProductRepository;
 import com.jo4ovms.StockifyAPI.repository.StockRepository;
+import com.jo4ovms.StockifyAPI.service.LogService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import com.jo4ovms.StockifyAPI.model.Log.OperationType;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -16,6 +20,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import java.util.stream.Collectors;
@@ -34,6 +39,12 @@ public class StockService {
     @Autowired
     private StockMapper stockMapper;
 
+    @Autowired
+    private LogService logService;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
    // @CacheEvict(value = "stocks", allEntries = true)
    public StockDTO createStock(StockDTO stockDTO) {
        Product product = productRepository.findById(stockDTO.getProductId())
@@ -41,12 +52,26 @@ public class StockService {
 
        Stock stock = stockMapper.toStock(stockDTO);
        stock.setProduct(product);
-
-
        stock.setAvailable(stockDTO.getQuantity() > 0);
-
        Stock savedStock = stockRepository.save(stock);
 
+       LogDTO logDTO = new LogDTO();
+       logDTO.setTimestamp(savedStock.getCreatedAt());
+       logDTO.setEntity("Stock");
+       logDTO.setEntityId(savedStock.getId());
+       logDTO.setOperationType(OperationType.CREATE.toString());
+
+       try {
+           String newValueJson = objectMapper.writeValueAsString(stockDTO);
+           logDTO.setNewValue(newValueJson);
+       } catch (Exception e) {
+           e.printStackTrace();
+           logDTO.setNewValue("Error serializing new value");
+       }
+
+       logDTO.setDetails("Created new stock");
+
+       logService.createLog(logDTO);
        return stockMapper.toStockDTO(savedStock);
    }
 
@@ -58,14 +83,45 @@ public class StockService {
        Product product = productRepository.findById(stockDTO.getProductId())
                .orElseThrow(() -> new ResourceNotFoundException("Product with id " + stockDTO.getProductId() + " not found"));
 
+       StockDTO oldStockDTO = stockMapper.toStockDTO(stock);
+
+
        stock.setQuantity(stockDTO.getQuantity());
        stock.setValue(stockDTO.getValue());
        stock.setProduct(product);
-
-
        stock.setAvailable(stockDTO.getQuantity() > 0);
 
+
        Stock updatedStock = stockRepository.save(stock);
+
+
+       LogDTO logDTO = new LogDTO();
+       logDTO.setTimestamp(LocalDateTime.now());
+       logDTO.setEntity("Stock");
+       logDTO.setEntityId(updatedStock.getId());
+       logDTO.setOperationType(OperationType.UPDATE.toString());
+
+       try {
+
+           String oldValueJson = objectMapper.writeValueAsString(oldStockDTO);
+           logDTO.setOldValue(oldValueJson);
+       } catch (Exception e) {
+           e.printStackTrace();
+           logDTO.setOldValue("Error serializing old value");
+       }
+
+       try {
+
+           StockDTO updatedStockDTO = stockMapper.toStockDTO(updatedStock);
+           String newValueJson = objectMapper.writeValueAsString(updatedStockDTO);
+           logDTO.setNewValue(newValueJson);
+       } catch (Exception e) {
+           e.printStackTrace();
+           logDTO.setNewValue("Error serializing new value");
+       }
+
+       logDTO.setDetails("Updated stock");
+       logService.createLog(logDTO);
 
        return stockMapper.toStockDTO(updatedStock);
    }
@@ -73,7 +129,7 @@ public class StockService {
     public Page<StockDTO> getAllStocks(Pageable pageable) {
         return stockRepository.findAll(pageable).map(stock -> {
             StockDTO stockDTO = stockMapper.toStockDTO(stock);
-            stockDTO.setAvailable(stockDTO.getQuantity() > 0); // Set available based on quantity
+            stockDTO.setAvailable(stockDTO.getQuantity() > 0);
             return stockDTO;
         });
     }
@@ -94,8 +150,19 @@ public class StockService {
    public void deleteStock(Long id) {
        Stock stock = stockRepository.findById(id)
                .orElseThrow(() -> new ResourceNotFoundException("Stock with id " + id + " not found"));
+       StockDTO oldStockDTO = stockMapper.toStockDTO(stock);
        stockRepository.delete(stock);
         stockRepository.flush();
+
+        LogDTO logDTO = new LogDTO();
+        logDTO.setTimestamp(stock.getUpdatedAt());
+        logDTO.setEntity("Stock");
+        logDTO.setEntityId(stock.getId());
+        logDTO.setOperationType(OperationType.DELETE.toString());
+        logDTO.setOldValue(oldStockDTO.toString());
+        logDTO.setDetails("Deleted stock");
+
+        logService.createLog(logDTO);
    }
 
     public Page<StockDTO> getStocksBySupplier(Long supplierId, Pageable pageable) {

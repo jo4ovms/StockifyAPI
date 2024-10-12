@@ -1,9 +1,11 @@
 package com.jo4ovms.StockifyAPI.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jo4ovms.StockifyAPI.exception.DuplicateResourceException;
 import com.jo4ovms.StockifyAPI.exception.ResourceNotFoundException;
 import com.jo4ovms.StockifyAPI.exception.ValidationException;
 import com.jo4ovms.StockifyAPI.mapper.SupplierMapper;
+import com.jo4ovms.StockifyAPI.model.DTO.LogDTO;
 import com.jo4ovms.StockifyAPI.model.DTO.SupplierDTO;
 import com.jo4ovms.StockifyAPI.model.Supplier;
 import com.jo4ovms.StockifyAPI.repository.SupplierRepository;
@@ -16,7 +18,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
+import com.jo4ovms.StockifyAPI.model.Log.OperationType;
 import java.util.List;
 
 
@@ -27,10 +29,14 @@ public class SupplierService {
     @Autowired
     private SupplierRepository supplierRepository;
 
-
-
     @Autowired
     private SupplierMapper supplierMapper;
+
+    @Autowired
+    private LogService logService;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     //@CachePut(value = "suppliers", key = "#result.id")
     public SupplierDTO createSupplier(SupplierDTO supplierDTO) {
@@ -39,6 +45,23 @@ public class SupplierService {
         }
         Supplier supplier = supplierMapper.toSupplier(supplierDTO);
         Supplier savedSupplier = supplierRepository.save(supplier);
+
+
+        LogDTO logDTO = new LogDTO();
+        logDTO.setTimestamp(savedSupplier.getCreatedAt());
+        logDTO.setEntity("Supplier");
+        logDTO.setEntityId(savedSupplier.getId());
+        logDTO.setOperationType(OperationType.CREATE.toString());
+        try {
+            String newValueJson = objectMapper.writeValueAsString(supplierDTO);
+            logDTO.setNewValue(newValueJson);
+        } catch (Exception e) {
+            e.printStackTrace();
+            logDTO.setNewValue("Error serializing new value");
+        }
+        logDTO.setDetails("Created new supplier");
+        logService.createLog(logDTO);
+
         return supplierMapper.toSupplierDTO(savedSupplier);
     }
 
@@ -46,12 +69,33 @@ public class SupplierService {
     public SupplierDTO updateSupplier(Long id, SupplierDTO supplierDTO) {
         Supplier supplier = supplierRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Supplier with id " + id + " not found."));
+
+        SupplierDTO oldSupplierDTO = supplierMapper.toSupplierDTO(supplier);
+
         supplier.setName(supplierDTO.getName());
         supplier.setPhone(supplierDTO.getPhone());
         supplier.setEmail(supplierDTO.getEmail());
         supplier.setProductType(supplierDTO.getProductType());
 
         Supplier updatedSupplier = supplierRepository.save(supplier);
+
+
+        LogDTO logDTO = new LogDTO();
+        logDTO.setTimestamp(updatedSupplier.getUpdatedAt());
+        logDTO.setEntity("Supplier");
+        logDTO.setEntityId(updatedSupplier.getId());
+        logDTO.setOperationType(OperationType.UPDATE.toString());
+        logDTO.setOldValue(oldSupplierDTO.toString());
+        try {
+            String newValueJson = objectMapper.writeValueAsString(supplierDTO);
+            logDTO.setNewValue(newValueJson);
+        } catch (Exception e) {
+            e.printStackTrace();
+            logDTO.setNewValue("Error serializing new value");
+        }
+        logDTO.setDetails("Updated supplier");
+        logService.createLog(logDTO);
+
         return supplierMapper.toSupplierDTO(updatedSupplier);
     }
 
@@ -70,11 +114,23 @@ public class SupplierService {
     }
 
    // @CacheEvict(value = "suppliers", key = "#id")
-    public void deleteSupplier(Long id) {
-        Supplier supplier = supplierRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Supplier with id " + id + " not found."));
-        supplierRepository.delete(supplier);
-    }
+   public void deleteSupplier(Long id) {
+       Supplier supplier = supplierRepository.findById(id)
+               .orElseThrow(() -> new ResourceNotFoundException("Supplier with id " + id + " not found."));
+
+       SupplierDTO oldSupplierDTO = supplierMapper.toSupplierDTO(supplier);
+       supplierRepository.delete(supplier);
+
+
+       LogDTO logDTO = new LogDTO();
+       logDTO.setTimestamp(supplier.getUpdatedAt());
+       logDTO.setEntity("Supplier");
+       logDTO.setEntityId(supplier.getId());
+       logDTO.setOperationType(OperationType.DELETE.toString());
+       logDTO.setOldValue(oldSupplierDTO.toString());
+       logDTO.setDetails("Deleted supplier");
+       logService.createLog(logDTO);
+   }
 
 
    // @Cacheable(value = "suppliersByName", key = "#name")

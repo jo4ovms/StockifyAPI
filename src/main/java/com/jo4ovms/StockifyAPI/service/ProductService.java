@@ -1,8 +1,10 @@
 package com.jo4ovms.StockifyAPI.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jo4ovms.StockifyAPI.exception.ResourceNotFoundException;
 import com.jo4ovms.StockifyAPI.exception.ValidationException;
 import com.jo4ovms.StockifyAPI.mapper.ProductMapper;
+import com.jo4ovms.StockifyAPI.model.DTO.LogDTO;
 import com.jo4ovms.StockifyAPI.model.DTO.ProductDTO;
 import com.jo4ovms.StockifyAPI.model.Product;
 import com.jo4ovms.StockifyAPI.model.Supplier;
@@ -17,6 +19,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import com.jo4ovms.StockifyAPI.model.Log.OperationType;
 
 import java.util.List;
 
@@ -34,6 +37,12 @@ public class ProductService {
     @Autowired
     private ProductMapper productMapper;
 
+    @Autowired
+    private LogService logService;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
     //@CachePut(value = "products", key = "#result.id")
     public ProductDTO createProduct(ProductDTO productDTO) {
         Supplier supplier = supplierRepository.findById(productDTO.getSupplierId())
@@ -45,6 +54,23 @@ public class ProductService {
         Product product = productMapper.toProduct(productDTO);
         product.setSupplier(supplier);
         Product savedProduct = productRepository.save(product);
+
+
+        LogDTO logDTO = new LogDTO();
+        logDTO.setTimestamp(savedProduct.getCreatedAt());
+        logDTO.setEntity("Product");
+        logDTO.setEntityId(savedProduct.getId());
+        logDTO.setOperationType(OperationType.CREATE.toString());
+        try {
+            String newValueJson = objectMapper.writeValueAsString(productDTO);
+            logDTO.setNewValue(newValueJson);
+        } catch (Exception e) {
+            e.printStackTrace();
+            logDTO.setNewValue("Error serializing new value");
+        }
+        logDTO.setDetails("Created new product");
+        logService.createLog(logDTO);
+
         return productMapper.toProductDTO(savedProduct);
     }
 
@@ -55,14 +81,35 @@ public class ProductService {
         Supplier supplier = supplierRepository.findById(productDTO.getSupplierId())
                 .orElseThrow(() -> new ResourceNotFoundException("Supplier with id " + productDTO.getSupplierId() + " not found"));
 
+        ProductDTO oldProductDTO = productMapper.toProductDTO(product);
+
         product.setName(productDTO.getName());
         product.setValue(productDTO.getValue());
         product.setQuantity(productDTO.getQuantity());
         product.setSupplier(supplier);
 
         Product updatedProduct = productRepository.save(product);
+
+
+        LogDTO logDTO = new LogDTO();
+        logDTO.setTimestamp(updatedProduct.getUpdatedAt());
+        logDTO.setEntity("Product");
+        logDTO.setEntityId(updatedProduct.getId());
+        logDTO.setOperationType(OperationType.UPDATE.toString());
+        logDTO.setOldValue(oldProductDTO.toString());
+        try {
+            String newValueJson = objectMapper.writeValueAsString(productDTO);
+            logDTO.setNewValue(newValueJson);
+        } catch (Exception e) {
+            e.printStackTrace();
+            logDTO.setNewValue("Error serializing new value");
+        }
+        logDTO.setDetails("Updated product");
+        logService.createLog(logDTO);
+
         return productMapper.toProductDTO(updatedProduct);
     }
+
 
     public Page<ProductDTO> searchProductsByName(String searchTerm, int page, int size) {
         if (page < 0 || size <= 0) {
@@ -96,11 +143,22 @@ public class ProductService {
     }
 
    // @CacheEvict(value = "products", key = "#id")
-    public void deleteProduct(Long id) {
-        Product product = productRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Product with id " + id + " not found"));
-        productRepository.delete(product);
-    }
+   public void deleteProduct(Long id) {
+       Product product = productRepository.findById(id)
+               .orElseThrow(() -> new ResourceNotFoundException("Product with id " + id + " not found"));
+
+       ProductDTO oldProductDTO = productMapper.toProductDTO(product);
+       productRepository.delete(product);
+
+       LogDTO logDTO = new LogDTO();
+       logDTO.setTimestamp(product.getUpdatedAt());
+       logDTO.setEntity("Product");
+       logDTO.setEntityId(product.getId());
+       logDTO.setOperationType(OperationType.DELETE.toString());
+       logDTO.setOldValue(oldProductDTO.toString());
+       logDTO.setDetails("Deleted product");
+       logService.createLog(logDTO);
+   }
 
 
    // @Cacheable(value = "productsByQuantity", key = "#quantity")
