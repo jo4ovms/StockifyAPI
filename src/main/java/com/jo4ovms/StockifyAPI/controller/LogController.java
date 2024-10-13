@@ -38,7 +38,24 @@ public class LogController {
             PagedModel<EntityModel<LogDTO>> pagedModel = pagedResourcesAssembler.toModel(recentLogs);
             return ResponseEntity.ok(pagedModel);
         } else {
-            return ResponseEntity.noContent().build(); // Return 204 if no logs found
+            return ResponseEntity.noContent().build();
+        }
+    }
+
+    @GetMapping
+    public ResponseEntity<PagedModel<EntityModel<LogDTO>>> getAllLogs(
+            @RequestParam(required = false) String entity,
+            @RequestParam(required = false) String operationType,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        Page<LogDTO> logs = logService.getAllLogs(entity, operationType, page, size);
+
+        if (logs.hasContent()) {
+            PagedModel<EntityModel<LogDTO>> pagedModel = pagedResourcesAssembler.toModel(logs);
+            return ResponseEntity.ok(pagedModel);
+        } else {
+            return ResponseEntity.noContent().build();
         }
     }
 }

@@ -37,9 +37,21 @@ public class LogService {
         }
     }
 
-    public Page<LogDTO> getAllLogs(int page, int size) {
-        PageRequest pageable = PageRequest.of(page, size);
-        return logRepository.findAll(pageable).map(logMapper::toLogDTO);
+    public Page<LogDTO> getAllLogs(String entity, String operationType, int page, int size) {
+        PageRequest pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "timestamp"));
+
+        if (entity != null && !entity.isEmpty() && operationType != null && !operationType.isEmpty()) {
+            Log.OperationType opType = Log.OperationType.valueOf(operationType.toUpperCase());
+            return logRepository.findByEntityAndOperationType(entity, opType, pageable).map(logMapper::toLogDTO);
+        } else if (entity != null && !entity.isEmpty()) {
+            return logRepository.findByEntity(entity, pageable).map(logMapper::toLogDTO);
+        } else if (operationType != null && !operationType.isEmpty()) {
+            Log.OperationType opType = Log.OperationType.valueOf(operationType.toUpperCase());
+            return logRepository.findByOperationType(opType, pageable).map(logMapper::toLogDTO);
+        } else {
+
+            return logRepository.findAll(pageable).map(logMapper::toLogDTO);
+        }
     }
 
     public Page<LogDTO> getRecentActivities(int page, int size) {
