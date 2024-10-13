@@ -60,9 +60,10 @@ public class StockService {
        logDTO.setEntity("Stock");
        logDTO.setEntityId(savedStock.getId());
        logDTO.setOperationType(OperationType.CREATE.toString());
+       logDTO.setAvailable(savedStock.isAvailable());
 
        try {
-           String newValueJson = objectMapper.writeValueAsString(stockDTO);
+           String newValueJson = objectMapper.writeValueAsString(stockMapper.toStockDTO(savedStock));
            logDTO.setNewValue(newValueJson);
        } catch (Exception e) {
            e.printStackTrace();
@@ -102,18 +103,14 @@ public class StockService {
        logDTO.setOperationType(OperationType.UPDATE.toString());
 
        try {
-
            String oldValueJson = objectMapper.writeValueAsString(oldStockDTO);
            logDTO.setOldValue(oldValueJson);
        } catch (Exception e) {
            e.printStackTrace();
            logDTO.setOldValue("Error serializing old value");
        }
-
        try {
-
-           StockDTO updatedStockDTO = stockMapper.toStockDTO(updatedStock);
-           String newValueJson = objectMapper.writeValueAsString(updatedStockDTO);
+           String newValueJson = objectMapper.writeValueAsString(stockMapper.toStockDTO(updatedStock));
            logDTO.setNewValue(newValueJson);
        } catch (Exception e) {
            e.printStackTrace();
@@ -159,7 +156,13 @@ public class StockService {
         logDTO.setEntity("Stock");
         logDTO.setEntityId(stock.getId());
         logDTO.setOperationType(OperationType.DELETE.toString());
-        logDTO.setOldValue(oldStockDTO.toString());
+        try {
+            String oldValueJson = objectMapper.writeValueAsString(oldStockDTO);
+            logDTO.setOldValue(oldValueJson);
+        } catch (Exception e) {
+            e.printStackTrace();
+            logDTO.setOldValue("Error serializing old value");
+        }
         logDTO.setDetails("Deleted stock");
 
         logService.createLog(logDTO);

@@ -2,7 +2,6 @@ package com.jo4ovms.StockifyAPI.controller;
 
 import com.jo4ovms.StockifyAPI.model.DTO.LogDTO;
 import com.jo4ovms.StockifyAPI.service.LogService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.EntityModel;
@@ -34,8 +33,12 @@ public class LogController {
             @RequestParam(defaultValue = "10") int size) {
 
         Page<LogDTO> recentLogs = logService.getRecentActivities(page, size);
-        PagedModel<EntityModel<LogDTO>> pagedModel = pagedResourcesAssembler.toModel(recentLogs);
 
-        return ResponseEntity.ok(pagedModel);
+        if (recentLogs.hasContent()) {
+            PagedModel<EntityModel<LogDTO>> pagedModel = pagedResourcesAssembler.toModel(recentLogs);
+            return ResponseEntity.ok(pagedModel);
+        } else {
+            return ResponseEntity.noContent().build(); // Return 204 if no logs found
+        }
     }
 }

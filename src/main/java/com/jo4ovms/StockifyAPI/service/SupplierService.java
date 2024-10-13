@@ -3,7 +3,6 @@ package com.jo4ovms.StockifyAPI.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jo4ovms.StockifyAPI.exception.DuplicateResourceException;
 import com.jo4ovms.StockifyAPI.exception.ResourceNotFoundException;
-import com.jo4ovms.StockifyAPI.exception.ValidationException;
 import com.jo4ovms.StockifyAPI.mapper.SupplierMapper;
 import com.jo4ovms.StockifyAPI.model.DTO.LogDTO;
 import com.jo4ovms.StockifyAPI.model.DTO.SupplierDTO;
@@ -53,7 +52,7 @@ public class SupplierService {
         logDTO.setEntityId(savedSupplier.getId());
         logDTO.setOperationType(OperationType.CREATE.toString());
         try {
-            String newValueJson = objectMapper.writeValueAsString(supplierDTO);
+            String newValueJson = objectMapper.writeValueAsString(supplierMapper.toSupplierDTO(savedSupplier));
             logDTO.setNewValue(newValueJson);
         } catch (Exception e) {
             e.printStackTrace();
@@ -85,9 +84,15 @@ public class SupplierService {
         logDTO.setEntity("Supplier");
         logDTO.setEntityId(updatedSupplier.getId());
         logDTO.setOperationType(OperationType.UPDATE.toString());
-        logDTO.setOldValue(oldSupplierDTO.toString());
         try {
-            String newValueJson = objectMapper.writeValueAsString(supplierDTO);
+            String oldValueJson = objectMapper.writeValueAsString(oldSupplierDTO);
+            logDTO.setOldValue(oldValueJson);
+        } catch (Exception e) {
+            e.printStackTrace();
+            logDTO.setOldValue("Error serializing old value");
+        }
+        try {
+            String newValueJson = objectMapper.writeValueAsString(supplierMapper.toSupplierDTO(updatedSupplier));
             logDTO.setNewValue(newValueJson);
         } catch (Exception e) {
             e.printStackTrace();
@@ -127,7 +132,14 @@ public class SupplierService {
        logDTO.setEntity("Supplier");
        logDTO.setEntityId(supplier.getId());
        logDTO.setOperationType(OperationType.DELETE.toString());
-       logDTO.setOldValue(oldSupplierDTO.toString());
+       try {
+
+           String oldValueJson = objectMapper.writeValueAsString(oldSupplierDTO);
+           logDTO.setOldValue(oldValueJson);
+       } catch (Exception e) {
+           e.printStackTrace();
+           logDTO.setOldValue("Error serializing old value");
+       }
        logDTO.setDetails("Deleted supplier");
        logService.createLog(logDTO);
    }

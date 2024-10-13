@@ -21,7 +21,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import com.jo4ovms.StockifyAPI.model.Log.OperationType;
 
-import java.util.List;
 
 
 @Service
@@ -62,7 +61,7 @@ public class ProductService {
         logDTO.setEntityId(savedProduct.getId());
         logDTO.setOperationType(OperationType.CREATE.toString());
         try {
-            String newValueJson = objectMapper.writeValueAsString(productDTO);
+            String newValueJson = objectMapper.writeValueAsString(productMapper.toProductDTO(savedProduct));
             logDTO.setNewValue(newValueJson);
         } catch (Exception e) {
             e.printStackTrace();
@@ -96,9 +95,15 @@ public class ProductService {
         logDTO.setEntity("Product");
         logDTO.setEntityId(updatedProduct.getId());
         logDTO.setOperationType(OperationType.UPDATE.toString());
-        logDTO.setOldValue(oldProductDTO.toString());
         try {
-            String newValueJson = objectMapper.writeValueAsString(productDTO);
+            String oldValueJson = objectMapper.writeValueAsString(oldProductDTO);
+            logDTO.setOldValue(oldValueJson);
+        } catch (Exception e) {
+            e.printStackTrace();
+            logDTO.setOldValue("Error serializing old value");
+        }
+        try {
+            String newValueJson = objectMapper.writeValueAsString(productMapper.toProductDTO(updatedProduct));
             logDTO.setNewValue(newValueJson);
         } catch (Exception e) {
             e.printStackTrace();
@@ -128,7 +133,6 @@ public class ProductService {
         if (page < 0 || size <= 0) {
             throw new IllegalArgumentException("Page number or size must not be less than zero.");
         }
-
         Pageable pageable = PageRequest.of(page, size);
         Page<Product> products = productRepository.findAll(pageable);
 
@@ -155,7 +159,13 @@ public class ProductService {
        logDTO.setEntity("Product");
        logDTO.setEntityId(product.getId());
        logDTO.setOperationType(OperationType.DELETE.toString());
-       logDTO.setOldValue(oldProductDTO.toString());
+       try {
+           String oldValueJson = objectMapper.writeValueAsString(oldProductDTO);
+           logDTO.setOldValue(oldValueJson);
+       } catch (Exception e) {
+           e.printStackTrace();
+           logDTO.setOldValue("Error serializing old value");
+       }
        logDTO.setDetails("Deleted product");
        logService.createLog(logDTO);
    }
@@ -174,12 +184,8 @@ public class ProductService {
 
     public Page<ProductDTO> searchProductsBySupplier(Long supplierId, String searchTerm, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-
-
         Supplier supplier = supplierRepository.findById(supplierId)
                 .orElseThrow(() -> new ResourceNotFoundException("Supplier with id " + supplierId + " not found"));
-
-
         Page<Product> products = productRepository.findBySupplierAndNameContainingIgnoreCase(supplier, searchTerm, pageable);
 
         return products.map(productMapper::toProductDTO);
