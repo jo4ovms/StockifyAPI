@@ -16,4 +16,6 @@ public class SaleDTO {
 
     @NotNull(message = "Stock ID is required.")
     private Long stockId;
+
+    private String productName;
 }

@@ -71,11 +71,32 @@ public class SupplierService {
 
         SupplierDTO oldSupplierDTO = supplierMapper.toSupplierDTO(supplier);
 
-        supplier.setName(supplierDTO.getName());
-        supplier.setPhone(supplierDTO.getPhone());
-        supplier.setEmail(supplierDTO.getEmail());
-        supplier.setProductType(supplierDTO.getProductType());
 
+        boolean hasChanges = false;
+
+        if (!supplierDTO.getName().equals(supplier.getName())) {
+            supplier.setName(supplierDTO.getName());
+            hasChanges = true;
+        }
+
+        if (!supplierDTO.getPhone().equals(supplier.getPhone())) {
+            supplier.setPhone(supplierDTO.getPhone());
+            hasChanges = true;
+        }
+
+        if (!supplierDTO.getEmail().equals(supplier.getEmail())) {
+            supplier.setEmail(supplierDTO.getEmail());
+            hasChanges = true;
+        }
+
+        if (!supplierDTO.getProductType().equals(supplier.getProductType())) {
+            supplier.setProductType(supplierDTO.getProductType());
+            hasChanges = true;
+        }
+
+        if (!hasChanges) {
+            return supplierMapper.toSupplierDTO(supplier);
+        }
         Supplier updatedSupplier = supplierRepository.save(supplier);
 
 
@@ -84,6 +105,7 @@ public class SupplierService {
         logDTO.setEntity("Supplier");
         logDTO.setEntityId(updatedSupplier.getId());
         logDTO.setOperationType(OperationType.UPDATE.toString());
+
         try {
             String oldValueJson = objectMapper.writeValueAsString(oldSupplierDTO);
             logDTO.setOldValue(oldValueJson);
@@ -91,6 +113,7 @@ public class SupplierService {
             e.printStackTrace();
             logDTO.setOldValue("Error serializing old value");
         }
+
         try {
             String newValueJson = objectMapper.writeValueAsString(supplierMapper.toSupplierDTO(updatedSupplier));
             logDTO.setNewValue(newValueJson);
@@ -98,11 +121,13 @@ public class SupplierService {
             e.printStackTrace();
             logDTO.setNewValue("Error serializing new value");
         }
+
         logDTO.setDetails("Updated supplier");
         logService.createLog(logDTO);
 
         return supplierMapper.toSupplierDTO(updatedSupplier);
     }
+
 
     //@Cacheable(value = "suppliers", key = "#page + '-' + #size")
     public Page<SupplierDTO> findAllSuppliers(int page, int size) {
