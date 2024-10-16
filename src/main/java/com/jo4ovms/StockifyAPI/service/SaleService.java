@@ -6,13 +6,15 @@ import com.jo4ovms.StockifyAPI.mapper.SaleMapper;
 import com.jo4ovms.StockifyAPI.model.DTO.BestSellingItemDTO;
 import com.jo4ovms.StockifyAPI.model.DTO.LogDTO;
 import com.jo4ovms.StockifyAPI.model.DTO.SaleDTO;
+import com.jo4ovms.StockifyAPI.model.DTO.SaleSummaryDTO;
 import com.jo4ovms.StockifyAPI.model.Log;
 import com.jo4ovms.StockifyAPI.model.Sale;
 import com.jo4ovms.StockifyAPI.model.Stock;
-import com.jo4ovms.StockifyAPI.repository.ProductRepository;
 import com.jo4ovms.StockifyAPI.repository.SaleRepository;
 import com.jo4ovms.StockifyAPI.repository.StockRepository;
 import jakarta.transaction.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -92,6 +94,14 @@ public class SaleService {
     public List<BestSellingItemDTO> getBestSellingItems() {
         return saleRepository.findBestSellingItems();
     }
+
+
+
+    public Page<SaleSummaryDTO> getAllSalesGroupedByProduct(String searchTerm, Pageable pageable) {
+        return saleRepository.findSalesGroupedByProduct(searchTerm, pageable);
+    }
+
+
 
 
 }
