@@ -24,7 +24,8 @@ public interface SaleRepository extends JpaRepository<Sale, Long> {
             "FROM Sale s " +
             "WHERE (:searchTerm IS NULL OR LOWER(s.product.name) LIKE LOWER(CONCAT('%', :searchTerm, '%'))) " +
             "GROUP BY s.product.name")
-    Page<SaleSummaryDTO> findSalesGroupedByProduct(@Param("searchTerm") String searchTerm, Pageable pageable);
+    List<SaleSummaryDTO> findSalesGroupedByProduct(@Param("searchTerm") String searchTerm);
+
 
 
 }

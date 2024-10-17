@@ -13,10 +13,11 @@ import com.jo4ovms.StockifyAPI.model.Stock;
 import com.jo4ovms.StockifyAPI.repository.SaleRepository;
 import com.jo4ovms.StockifyAPI.repository.StockRepository;
 import jakarta.transaction.Transactional;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -97,9 +98,35 @@ public class SaleService {
 
 
 
-    public Page<SaleSummaryDTO> getAllSalesGroupedByProduct(String searchTerm, Pageable pageable) {
-        return saleRepository.findSalesGroupedByProduct(searchTerm, pageable);
+    public Page<SaleSummaryDTO> getAllSalesGroupedByProduct(String searchTerm, Pageable pageable, String sortDirection) {
+
+        List<SaleSummaryDTO> results = saleRepository.findSalesGroupedByProduct(searchTerm);
+
+        // Sort the results
+        if ("asc".equalsIgnoreCase(sortDirection)) {
+            results.sort(Comparator.comparing(SaleSummaryDTO::getTotalQuantitySold));
+        } else {
+            results.sort(Comparator.comparing(SaleSummaryDTO::getTotalQuantitySold).reversed());
+        }
+
+        // Apply pagination
+        int pageNumber = pageable.getPageNumber();
+        int pageSize = pageable.getPageSize();
+        int fromIndex = pageNumber * pageSize;
+        int toIndex = Math.min(fromIndex + pageSize, results.size());
+
+        List<SaleSummaryDTO> pageContent;
+        if (fromIndex > results.size()) {
+            pageContent = Collections.emptyList();
+        } else {
+            pageContent = results.subList(fromIndex, toIndex);
+        }
+
+        return new PageImpl<>(pageContent, pageable, results.size());
     }
+
+
+
 
 
 
