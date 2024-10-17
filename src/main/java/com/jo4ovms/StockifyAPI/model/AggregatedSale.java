@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
+
 @Entity
 @Data
 @AllArgsConstructor
@@ -20,4 +22,6 @@ public class AggregatedSale {
     @ManyToOne
     private Stock stock;
     private Long totalQuantitySold;
+
+    private LocalDate saleDate;
 }

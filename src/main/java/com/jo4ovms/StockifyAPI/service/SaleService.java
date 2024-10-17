@@ -13,6 +13,8 @@ import com.jo4ovms.StockifyAPI.repository.StockRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -92,16 +94,18 @@ public class SaleService {
 
 
 
-    public Page<SaleSummaryDTO> getAllSalesGroupedByProduct(String searchTerm, Long supplierId, int page, int size, String sortDirection) {
-
+    public Page<SaleSummaryDTO> getAllSalesGroupedByProduct(String searchTerm, Long supplierId, int page, int size, String sortDirection, LocalDate startDate, LocalDate endDate) {
         Sort sort = Sort.by("totalQuantitySold");
         sort = "asc".equalsIgnoreCase(sortDirection) ? sort.ascending() : sort.descending();
-
 
         Pageable pageable = PageRequest.of(page, size, sort);
 
 
-        return aggregatedSaleRepository.findSalesGroupedByProductAndSupplier(searchTerm, supplierId, pageable);
+        if (startDate != null && endDate != null) {
+            return aggregatedSaleRepository.findSalesGroupedByProductAndSupplierAndDate(searchTerm, supplierId, startDate, endDate, pageable);
+        } else {
+            return aggregatedSaleRepository.findSalesGroupedByProductAndSupplier(searchTerm, supplierId, pageable);
+        }
     }
 
     public List<DailySalesDTO> getSalesGroupedByDay(int month) {

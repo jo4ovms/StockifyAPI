@@ -6,10 +6,12 @@ import com.jo4ovms.StockifyAPI.model.DTO.SaleDTO;
 import com.jo4ovms.StockifyAPI.model.DTO.SaleSummaryDTO;
 import com.jo4ovms.StockifyAPI.service.SaleService;
 import org.springframework.data.domain.Page;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -41,10 +43,13 @@ public class SaleController {
             @RequestParam(required = false) Long supplierId,
             @RequestParam(defaultValue = "desc") String sortDirection,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
 
-
-        Page<SaleSummaryDTO> salesPage = saleService.getAllSalesGroupedByProduct(searchTerm, supplierId, page, size, sortDirection);
+        Page<SaleSummaryDTO> salesPage = saleService.getAllSalesGroupedByProduct(
+                searchTerm, supplierId, page, size, sortDirection, startDate, endDate
+        );
         return ResponseEntity.ok(salesPage);
     }
 

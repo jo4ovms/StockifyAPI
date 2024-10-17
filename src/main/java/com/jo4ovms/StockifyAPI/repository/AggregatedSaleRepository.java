@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDate;
 import java.util.Optional;
 
 public interface AggregatedSaleRepository extends JpaRepository<AggregatedSale, Long> {
@@ -20,4 +21,16 @@ public interface AggregatedSaleRepository extends JpaRepository<AggregatedSale, 
 
     Optional<AggregatedSale> findByProductIdAndStockId(Long productId, Long stockId);
 
+    @Query("SELECT new com.jo4ovms.StockifyAPI.model.DTO.SaleSummaryDTO(a.stock.product.name, a.totalQuantitySold) " +
+            "FROM AggregatedSale a " +
+            "WHERE (:searchTerm IS NULL OR LOWER(a.stock.product.name) LIKE LOWER(CONCAT('%', :searchTerm, '%'))) " +
+            "AND (:supplierId IS NULL OR a.stock.product.supplier.id = :supplierId) " +
+            "AND (CAST(a.saleDate AS date) BETWEEN :startDate AND :endDate)")
+    Page<SaleSummaryDTO> findSalesGroupedByProductAndSupplierAndDate(
+            @Param("searchTerm") String searchTerm,
+            @Param("supplierId") Long supplierId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate,
+            Pageable pageable
+    );
 }

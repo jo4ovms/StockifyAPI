@@ -13,6 +13,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+
 @Service
 @Transactional
 public class AggregatedSaleService {
@@ -40,6 +42,9 @@ public class AggregatedSaleService {
 
 
         aggregatedSale.setTotalQuantitySold(aggregatedSale.getTotalQuantitySold() + quantitySold);
+
+
+        aggregatedSale.setSaleDate(LocalDate.now());
 
 
         aggregatedSaleRepository.save(aggregatedSale);
