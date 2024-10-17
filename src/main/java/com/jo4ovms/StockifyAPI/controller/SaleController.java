@@ -40,15 +40,16 @@ public class SaleController {
     @GetMapping
     public ResponseEntity<Page<SaleSummaryDTO>> getAllSales(
             @RequestParam(required = false, defaultValue = "") String searchTerm,
+            @RequestParam(required = false) Long supplierId,
             @RequestParam(defaultValue = "desc") String sortDirection,
             Pageable pageable) {
 
-        // Validate sortDirection
+
         if (!sortDirection.equalsIgnoreCase("asc") && !sortDirection.equalsIgnoreCase("desc")) {
             throw new IllegalArgumentException("Invalid value '" + sortDirection + "' for sort direction. Must be 'asc' or 'desc'");
         }
 
-        Page<SaleSummaryDTO> salesPage = saleService.getAllSalesGroupedByProduct(searchTerm, pageable, sortDirection);
+        Page<SaleSummaryDTO> salesPage = saleService.getAllSalesGroupedByProduct(searchTerm, supplierId, pageable, sortDirection);
         return ResponseEntity.ok(salesPage);
     }
 

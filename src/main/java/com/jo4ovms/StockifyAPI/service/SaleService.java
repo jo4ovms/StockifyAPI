@@ -98,18 +98,17 @@ public class SaleService {
 
 
 
-    public Page<SaleSummaryDTO> getAllSalesGroupedByProduct(String searchTerm, Pageable pageable, String sortDirection) {
+    public Page<SaleSummaryDTO> getAllSalesGroupedByProduct(String searchTerm, Long supplierId, Pageable pageable, String sortDirection) {
+        List<SaleSummaryDTO> results = saleRepository.findSalesGroupedByProductAndSupplier(searchTerm, supplierId);
 
-        List<SaleSummaryDTO> results = saleRepository.findSalesGroupedByProduct(searchTerm);
 
-        // Sort the results
         if ("asc".equalsIgnoreCase(sortDirection)) {
             results.sort(Comparator.comparing(SaleSummaryDTO::getTotalQuantitySold));
         } else {
             results.sort(Comparator.comparing(SaleSummaryDTO::getTotalQuantitySold).reversed());
         }
 
-        // Apply pagination
+
         int pageNumber = pageable.getPageNumber();
         int pageSize = pageable.getPageSize();
         int fromIndex = pageNumber * pageSize;

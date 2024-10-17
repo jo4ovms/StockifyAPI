@@ -23,8 +23,10 @@ public interface SaleRepository extends JpaRepository<Sale, Long> {
     @Query("SELECT new com.jo4ovms.StockifyAPI.model.DTO.SaleSummaryDTO(s.product.name, SUM(s.quantity)) " +
             "FROM Sale s " +
             "WHERE (:searchTerm IS NULL OR LOWER(s.product.name) LIKE LOWER(CONCAT('%', :searchTerm, '%'))) " +
+            "AND (:supplierId IS NULL OR s.product.supplier.id = :supplierId) " +
             "GROUP BY s.product.name")
-    List<SaleSummaryDTO> findSalesGroupedByProduct(@Param("searchTerm") String searchTerm);
+    List<SaleSummaryDTO> findSalesGroupedByProductAndSupplier(@Param("searchTerm") String searchTerm,
+                                                              @Param("supplierId") Long supplierId);
 
 
 
