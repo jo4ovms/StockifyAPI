@@ -3,10 +3,7 @@ package com.jo4ovms.StockifyAPI.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jo4ovms.StockifyAPI.exception.ResourceNotFoundException;
 import com.jo4ovms.StockifyAPI.mapper.SaleMapper;
-import com.jo4ovms.StockifyAPI.model.DTO.BestSellingItemDTO;
-import com.jo4ovms.StockifyAPI.model.DTO.LogDTO;
-import com.jo4ovms.StockifyAPI.model.DTO.SaleDTO;
-import com.jo4ovms.StockifyAPI.model.DTO.SaleSummaryDTO;
+import com.jo4ovms.StockifyAPI.model.DTO.*;
 import com.jo4ovms.StockifyAPI.model.Log;
 import com.jo4ovms.StockifyAPI.model.Sale;
 import com.jo4ovms.StockifyAPI.model.Stock;
@@ -122,6 +119,10 @@ public class SaleService {
         }
 
         return new PageImpl<>(pageContent, pageable, results.size());
+    }
+
+    public List<DailySalesDTO> getSalesGroupedByDay(int month) {
+        return saleRepository.findSalesGroupedByDay(month);
     }
 
 

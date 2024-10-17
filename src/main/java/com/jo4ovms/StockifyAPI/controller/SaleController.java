@@ -1,6 +1,7 @@
 package com.jo4ovms.StockifyAPI.controller;
 
 import com.jo4ovms.StockifyAPI.model.DTO.BestSellingItemDTO;
+import com.jo4ovms.StockifyAPI.model.DTO.DailySalesDTO;
 import com.jo4ovms.StockifyAPI.model.DTO.SaleDTO;
 import com.jo4ovms.StockifyAPI.model.DTO.SaleSummaryDTO;
 import com.jo4ovms.StockifyAPI.service.SaleService;
@@ -53,6 +54,11 @@ public class SaleController {
         return ResponseEntity.ok(salesPage);
     }
 
+
+    @GetMapping("/daily")
+    public List<DailySalesDTO> getSalesGroupedByDay(@RequestParam("month") int month) {
+        return saleService.getSalesGroupedByDay(month);
+    }
 
 
 }

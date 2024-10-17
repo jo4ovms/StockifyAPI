@@ -1,6 +1,7 @@
 package com.jo4ovms.StockifyAPI.repository;
 
 import com.jo4ovms.StockifyAPI.model.DTO.BestSellingItemDTO;
+import com.jo4ovms.StockifyAPI.model.DTO.DailySalesDTO;
 import com.jo4ovms.StockifyAPI.model.DTO.SaleSummaryDTO;
 import com.jo4ovms.StockifyAPI.model.Sale;
 import org.springframework.data.domain.Page;
@@ -28,6 +29,9 @@ public interface SaleRepository extends JpaRepository<Sale, Long> {
     List<SaleSummaryDTO> findSalesGroupedByProductAndSupplier(@Param("searchTerm") String searchTerm,
                                                               @Param("supplierId") Long supplierId);
 
+    @Query("SELECT new com.jo4ovms.StockifyAPI.model.DTO.DailySalesDTO(DAY(s.saleDate), SUM(s.quantity)) " +
+            "FROM Sale s WHERE MONTH(s.saleDate) = :month GROUP BY DAY(s.saleDate) ORDER BY DAY(s.saleDate)")
+    List<DailySalesDTO> findSalesGroupedByDay(int month);
 
 
 }
