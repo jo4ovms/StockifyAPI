@@ -20,15 +20,6 @@ public interface SaleRepository extends JpaRepository<Sale, Long> {
             "FROM Sale s GROUP BY s.product.name ORDER BY SUM(s.quantity) DESC")
     List<BestSellingItemDTO> findBestSellingItems();
 
-
-    @Query("SELECT new com.jo4ovms.StockifyAPI.model.DTO.SaleSummaryDTO(s.product.name, SUM(s.quantity)) " +
-            "FROM Sale s " +
-            "WHERE (:searchTerm IS NULL OR LOWER(s.product.name) LIKE LOWER(CONCAT('%', :searchTerm, '%'))) " +
-            "AND (:supplierId IS NULL OR s.product.supplier.id = :supplierId) " +
-            "GROUP BY s.product.name")
-    List<SaleSummaryDTO> findSalesGroupedByProductAndSupplier(@Param("searchTerm") String searchTerm,
-                                                              @Param("supplierId") Long supplierId);
-
     @Query("SELECT new com.jo4ovms.StockifyAPI.model.DTO.DailySalesDTO(DAY(s.saleDate), SUM(s.quantity)) " +
             "FROM Sale s WHERE MONTH(s.saleDate) = :month GROUP BY DAY(s.saleDate) ORDER BY DAY(s.saleDate)")
     List<DailySalesDTO> findSalesGroupedByDay(int month);
