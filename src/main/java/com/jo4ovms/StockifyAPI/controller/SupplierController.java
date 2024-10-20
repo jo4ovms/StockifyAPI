@@ -123,11 +123,12 @@ public class SupplierController {
     @GetMapping("/filter")
     public ResponseEntity<PagedModel<EntityModel<SupplierDTO>>> filterSuppliers(
             @RequestParam(required = false) String name,
-            @RequestParam(required = false) String productType,
+            @RequestParam(required = false, defaultValue = "all") String productType,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-
-        Page<SupplierDTO> suppliers = supplierService.filterSuppliers(name, productType, page, size);
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "name") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDirection) {
+        Page<SupplierDTO> suppliers = supplierService.filterSuppliers(name, productType, page, size, sortBy, sortDirection);
         PagedModel<EntityModel<SupplierDTO>> pagedModel = pagedResourcesAssembler.toModel(suppliers);
         return ResponseEntity.ok(pagedModel);
     }
