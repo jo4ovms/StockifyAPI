@@ -5,6 +5,7 @@ import com.jo4ovms.StockifyAPI.exception.ResourceNotFoundException;
 import com.jo4ovms.StockifyAPI.mapper.StockMapper;
 import com.jo4ovms.StockifyAPI.model.DTO.LogDTO;
 import com.jo4ovms.StockifyAPI.model.DTO.StockDTO;
+import com.jo4ovms.StockifyAPI.model.DTO.StockSummaryDTO;
 import com.jo4ovms.StockifyAPI.model.Product;
 import com.jo4ovms.StockifyAPI.model.Stock;
 import com.jo4ovms.StockifyAPI.repository.ProductRepository;
@@ -23,7 +24,6 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import java.util.stream.Collectors;
 
 
 @Service
@@ -209,11 +209,14 @@ public class StockService {
         return stockRepository.findMaxValue();
     }
 
-    public List<StockDTO> getAllStocksNonPaged() {
+    public StockSummaryDTO getStockSummary() {
+        List<Stock> stocks = stockRepository.findAll();
+        long totalProducts = stocks.size();
+        long zeroQuantity = stocks.stream().filter(s -> s.getQuantity() == 0).count();
+        long aboveThreshold = stocks.stream().filter(s -> s.getQuantity() > 5).count();
+        long betweenThreshold = stocks.stream().filter(s -> s.getQuantity() > 0 && s.getQuantity() <= 5).count();
 
-        return stockRepository.findAll().stream()
-                .map(stockMapper::toStockDTO)
-                .collect(Collectors.toList());
+        return new StockSummaryDTO(totalProducts, zeroQuantity, aboveThreshold, betweenThreshold);
     }
 
 }

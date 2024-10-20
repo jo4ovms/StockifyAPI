@@ -1,6 +1,7 @@
 package com.jo4ovms.StockifyAPI.controller;
 
 import com.jo4ovms.StockifyAPI.model.DTO.StockDTO;
+import com.jo4ovms.StockifyAPI.model.DTO.StockSummaryDTO;
 import com.jo4ovms.StockifyAPI.service.stock.StockService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -29,6 +30,8 @@ import java.util.Map;
 @RequestMapping("/api/stock")
 @Tag(name = "Stock", description = "Operations related to stock management")
 public class StockController {
+
+
 
     private final StockService stockService;
     private final PagedResourcesAssembler<StockDTO> pagedResourcesAssembler;
@@ -205,5 +208,16 @@ public class StockController {
         return ResponseEntity.ok(response);
     }
 
+
+    @GetMapping("/summary")
+    @ResponseBody
+    public StockSummaryDTO getStockSummary() {
+        try {
+            return stockService.getStockSummary();
+        } catch (Exception e) {
+
+            return new StockSummaryDTO(0, 0, 0, 0);
+        }
+    }
 
 }
