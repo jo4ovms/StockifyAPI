@@ -1,6 +1,5 @@
 package com.jo4ovms.StockifyAPI.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jo4ovms.StockifyAPI.exception.DuplicateResourceException;
 import com.jo4ovms.StockifyAPI.exception.ResourceNotFoundException;
 import com.jo4ovms.StockifyAPI.mapper.SupplierMapper;
@@ -8,6 +7,8 @@ import com.jo4ovms.StockifyAPI.model.DTO.LogDTO;
 import com.jo4ovms.StockifyAPI.model.DTO.SupplierDTO;
 import com.jo4ovms.StockifyAPI.model.Supplier;
 import com.jo4ovms.StockifyAPI.repository.SupplierRepository;
+import com.jo4ovms.StockifyAPI.specification.SupplierSpecification;
+import com.jo4ovms.StockifyAPI.util.LogUtils;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
@@ -16,6 +17,8 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import com.jo4ovms.StockifyAPI.model.Log.OperationType;
 import java.util.List;
@@ -25,17 +28,19 @@ import java.util.List;
 @Transactional
 public class SupplierService {
 
-    @Autowired
-    private SupplierRepository supplierRepository;
+    private final SupplierRepository supplierRepository;
+    private final SupplierMapper supplierMapper;
+    private final LogService logService;
+    private final LogUtils logUtils;
 
     @Autowired
-    private SupplierMapper supplierMapper;
+    public SupplierService(SupplierRepository supplierRepository, SupplierMapper supplierMapper, LogService logService, LogUtils logUtils) {
+        this.supplierRepository = supplierRepository;
+        this.supplierMapper = supplierMapper;
+        this.logService = logService;
+        this.logUtils = logUtils;
+    }
 
-    @Autowired
-    private LogService logService;
-
-    @Autowired
-    private ObjectMapper objectMapper;
 
     //@CachePut(value = "suppliers", key = "#result.id")
     public SupplierDTO createSupplier(SupplierDTO supplierDTO) {
@@ -48,19 +53,10 @@ public class SupplierService {
 
         LogDTO logDTO = new LogDTO();
         logDTO.setTimestamp(savedSupplier.getCreatedAt());
-        logDTO.setEntity("Supplier");
-        logDTO.setEntityId(savedSupplier.getId());
-        logDTO.setOperationType(OperationType.CREATE.toString());
-        try {
-            String newValueJson = objectMapper.writeValueAsString(supplierMapper.toSupplierDTO(savedSupplier));
-            logDTO.setNewValue(newValueJson);
-        } catch (Exception e) {
-            e.printStackTrace();
-            logDTO.setNewValue("Error serializing new value");
-        }
-        logDTO.setDetails("Created new supplier");
-        logService.createLog(logDTO);
+         logUtils.populateLog(logDTO, "Supplier", savedSupplier.getId(), OperationType.CREATE.toString(),
+                 supplierMapper.toSupplierDTO(savedSupplier), null, "Created new supplier");
 
+         logService.createLog(logDTO);
         return supplierMapper.toSupplierDTO(savedSupplier);
     }
 
@@ -102,27 +98,10 @@ public class SupplierService {
 
         LogDTO logDTO = new LogDTO();
         logDTO.setTimestamp(updatedSupplier.getUpdatedAt());
-        logDTO.setEntity("Supplier");
-        logDTO.setEntityId(updatedSupplier.getId());
-        logDTO.setOperationType(OperationType.UPDATE.toString());
+        logUtils.populateLog(logDTO, "Supplier", updatedSupplier.getId(), OperationType.UPDATE.toString(),
+                supplierMapper.toSupplierDTO(updatedSupplier), oldSupplierDTO, "Updated supplier");
 
-        try {
-            String oldValueJson = objectMapper.writeValueAsString(oldSupplierDTO);
-            logDTO.setOldValue(oldValueJson);
-        } catch (Exception e) {
-            e.printStackTrace();
-            logDTO.setOldValue("Error serializing old value");
-        }
 
-        try {
-            String newValueJson = objectMapper.writeValueAsString(supplierMapper.toSupplierDTO(updatedSupplier));
-            logDTO.setNewValue(newValueJson);
-        } catch (Exception e) {
-            e.printStackTrace();
-            logDTO.setNewValue("Error serializing new value");
-        }
-
-        logDTO.setDetails("Updated supplier");
         logService.createLog(logDTO);
 
         return supplierMapper.toSupplierDTO(updatedSupplier);
@@ -154,18 +133,9 @@ public class SupplierService {
 
        LogDTO logDTO = new LogDTO();
        logDTO.setTimestamp(supplier.getUpdatedAt());
-       logDTO.setEntity("Supplier");
-       logDTO.setEntityId(supplier.getId());
-       logDTO.setOperationType(OperationType.DELETE.toString());
-       try {
+       logUtils.populateLog(logDTO, "Supplier", supplier.getId(), OperationType.DELETE.toString(),
+               null, oldSupplierDTO, "Deleted supplier");
 
-           String oldValueJson = objectMapper.writeValueAsString(oldSupplierDTO);
-           logDTO.setOldValue(oldValueJson);
-       } catch (Exception e) {
-           e.printStackTrace();
-           logDTO.setOldValue("Error serializing old value");
-       }
-       logDTO.setDetails("Deleted supplier");
        logService.createLog(logDTO);
    }
 
@@ -180,29 +150,18 @@ public class SupplierService {
        return suppliers.map(supplierMapper::toSupplierDTO);
    }
 
-    public Page<SupplierDTO> filterSuppliers(String name, String productType, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
+    public Page<SupplierDTO> filterSuppliers(String name, String productType, int page, int size, String sortBy, String sortDirection) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(sortDirection), sortBy));
+        Specification<Supplier> specification = Specification.where(SupplierSpecification.hasName(name))
+                .and(SupplierSpecification.hasProductType(productType));
+
+        Page<Supplier> suppliers = supplierRepository.findAll(specification, pageable);
+
+            return suppliers.map(supplierMapper::toSupplierDTO);
 
 
-        if (name != null && !name.isEmpty() && productType != null && !productType.isEmpty()) {
-            return supplierRepository.findByNameContainingIgnoreCaseAndProductType(name, productType, pageable)
-                    .map(supplierMapper::toSupplierDTO);
-        }
-
-        else if (name != null && !name.isEmpty()) {
-            return supplierRepository.findByNameContainingIgnoreCase(name, pageable)
-                    .map(supplierMapper::toSupplierDTO);
-        }
-
-        else if (productType != null && !productType.isEmpty()) {
-            return supplierRepository.findByProductType(productType, pageable)
-                    .map(supplierMapper::toSupplierDTO);
-        }
-
-        else {
-            return supplierRepository.findAll(pageable).map(supplierMapper::toSupplierDTO);
-        }
     }
+
 
     public List<String> findAllProductTypes() {
         return supplierRepository.findDistinctProductTypes();
