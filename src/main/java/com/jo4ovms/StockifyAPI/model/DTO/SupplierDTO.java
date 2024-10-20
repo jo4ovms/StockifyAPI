@@ -3,6 +3,7 @@ package com.jo4ovms.StockifyAPI.model.DTO;
 import br.com.caelum.stella.bean.validation.CNPJ;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
@@ -18,6 +19,7 @@ public class SupplierDTO {
 
     @NotBlank(message = "Supplier Phone cannot be blank.")
     @Size(max = 15, message = "Phone number cannot exceed 15 characters.")
+    @Pattern(regexp = "^\\(\\d{2}\\)\\s\\d{4,5}-\\d{4}$", message = "Phone number must be in the format (XX) XXXX-XXXX or (XX) XXXXX-XXXX.")
     private String phone;
 
 
