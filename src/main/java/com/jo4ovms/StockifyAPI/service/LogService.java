@@ -14,17 +14,18 @@ import org.springframework.stereotype.Service;
 @Service
 public class LogService {
 
-    @Autowired
-    private LogRepository logRepository;
+    private final LogRepository logRepository;
+    private final LogMapper logMapper;
+    private final KafkaProducerService kafkaProducerService;
+    private final ObjectMapper objectMapper;
 
     @Autowired
-    private LogMapper logMapper;
-
-    @Autowired
-    private KafkaProducerService kafkaProducerService;
-
-    @Autowired
-    private ObjectMapper objectMapper;
+    public LogService(LogRepository logRepository, LogMapper logMapper, KafkaProducerService kafkaProducerService, ObjectMapper objectMapper) {
+        this.logRepository = logRepository;
+        this.logMapper = logMapper;
+        this.kafkaProducerService = kafkaProducerService;
+        this.objectMapper = objectMapper;
+    }
 
     public void createLog(LogDTO logDTO) {
         try {

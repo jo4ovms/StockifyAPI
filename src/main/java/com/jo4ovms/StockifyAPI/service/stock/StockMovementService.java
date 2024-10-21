@@ -19,14 +19,16 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class StockMovementService {
-    @Autowired
-    private StockMovementRepository stockMovementRepository;
+    private final StockMovementRepository stockMovementRepository;
+    private final StockMovementMapper stockMovementMapper;
+    private final StockRepository stockRepository;
 
     @Autowired
-    private StockMovementMapper stockMovementMapper;
-
-    @Autowired
-    private StockRepository stockRepository;
+    public StockMovementService(StockMovementRepository stockMovementRepository, StockMovementMapper stockMovementMapper, StockRepository stockRepository) {
+        this.stockMovementRepository = stockMovementRepository;
+        this.stockMovementMapper = stockMovementMapper;
+        this.stockRepository = stockRepository;
+    }
 
    // @CacheEvict(value = "stockMovements", key = "#id")
     public StockMovementDTO registerMovement(StockMovementDTO stockMovementDTO) {

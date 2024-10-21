@@ -34,16 +34,14 @@ public class ProductService {
     private final SupplierRepository supplierRepository;
     private final ProductMapper productMapper;
     private final LogService logService;
-    private final ObjectMapper objectMapper;
     private final LogUtils logUtils;
 
     @Autowired
-    public ProductService(ProductRepository productRepository, SupplierRepository supplierRepository, ProductMapper productMapper, LogService logService, ObjectMapper objectMapper, LogUtils logUtils) {
+    public ProductService(ProductRepository productRepository, SupplierRepository supplierRepository, ProductMapper productMapper, LogService logService, LogUtils logUtils) {
         this.productRepository = productRepository;
         this.supplierRepository = supplierRepository;
         this.productMapper = productMapper;
         this.logService = logService;
-        this.objectMapper = objectMapper;
         this.logUtils = logUtils;
     }
 

@@ -10,7 +10,9 @@ import com.jo4ovms.StockifyAPI.model.Stock;
 import com.jo4ovms.StockifyAPI.repository.AggregatedSaleRepository;
 import com.jo4ovms.StockifyAPI.repository.SaleRepository;
 import com.jo4ovms.StockifyAPI.repository.StockRepository;
+import com.jo4ovms.StockifyAPI.util.LogUtils;
 import jakarta.transaction.Transactional;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 
@@ -25,19 +27,20 @@ public class SaleService {
     private final SaleMapper saleMapper;
     private final SaleRepository saleRepository;
     private final LogService logService;
-    private final ObjectMapper objectMapper;
     private final AggregatedSaleService aggregatedSaleService;
     private final AggregatedSaleRepository aggregatedSaleRepository;
+    private final LogUtils logUtils;
 
 
-    public SaleService(StockRepository stockRepository, SaleMapper saleMapper, SaleRepository saleRepository, LogService logService, ObjectMapper objectMapper, AggregatedSaleService aggregatedSaleService, AggregatedSaleRepository aggregatedSaleRepository) {
+    @Autowired
+    public SaleService(StockRepository stockRepository, SaleMapper saleMapper, SaleRepository saleRepository, LogService logService, AggregatedSaleService aggregatedSaleService, AggregatedSaleRepository aggregatedSaleRepository, LogUtils logUtils) {
         this.stockRepository = stockRepository;
         this.saleMapper = saleMapper;
         this.saleRepository = saleRepository;
         this.logService = logService;
-        this.objectMapper = objectMapper;
         this.aggregatedSaleService = aggregatedSaleService;
         this.aggregatedSaleRepository = aggregatedSaleRepository;
+        this.logUtils = logUtils;
     }
 
     public SaleDTO registerSale(SaleDTO saleDTO) {
@@ -67,18 +70,8 @@ public class SaleService {
 
         LogDTO logDTO = new LogDTO();
         logDTO.setTimestamp(savedSale.getSaleDate());
-        logDTO.setEntity("Sale");
-        logDTO.setEntityId(savedSale.getId());
-        logDTO.setOperationType(Log.OperationType.CREATE.toString());
-        logDTO.setDetails("Sale registered: Stock ID " + stock.getId() + ", Product: " + productName + ", Quantity: " + saleDTO.getQuantity());
-
-        try {
-            String newValueJson = objectMapper.writeValueAsString(saleLogDTO);
-            logDTO.setNewValue(newValueJson);
-        } catch (Exception e) {
-            e.printStackTrace();
-            logDTO.setNewValue("Error serializing new value");
-        }
+        logUtils.populateLog(logDTO, "Sale", savedSale.getId(), Log.OperationType.CREATE.toString(), saleLogDTO, null,
+                "Sale registered: Stock ID " + stock.getId() + ", Product: " + productName + ", Quantity: " + saleDTO.getQuantity());
 
         logService.createLog(logDTO);
 
