@@ -20,7 +20,6 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Service
-@Transactional
 public class SaleService {
 
     private final StockRepository stockRepository;
@@ -43,6 +42,7 @@ public class SaleService {
         this.logUtils = logUtils;
     }
 
+    @Transactional
     public SaleDTO registerSale(SaleDTO saleDTO) {
 
         Stock stock = stockRepository.findById(saleDTO.getStockId())

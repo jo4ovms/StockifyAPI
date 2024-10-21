@@ -29,7 +29,6 @@ import java.util.function.Consumer;
 
 
 @Service
-@Transactional
 public class StockService {
 
 
@@ -58,6 +57,7 @@ public class StockService {
     }
 
    // @CacheEvict(value = "stocks", allEntries = true)
+   @Transactional
    public StockDTO createStock(StockDTO stockDTO) {
        Product product = productRepository.findById(stockDTO.getProductId())
                .orElseThrow(() -> new ResourceNotFoundException("Product with id " + stockDTO.getProductId() + " not found"));
@@ -77,6 +77,7 @@ public class StockService {
    }
 
    // @CacheEvict(value = "stocks", allEntries = true)
+   @Transactional
    public StockDTO updateStock(Long id, StockDTO stockDTO) {
        Stock stock = stockRepository.findById(id)
                .orElseThrow(() -> new ResourceNotFoundException("Stock with id " + id + " not found"));

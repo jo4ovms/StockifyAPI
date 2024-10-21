@@ -27,7 +27,6 @@ import java.util.function.Consumer;
 
 
 @Service
-@Transactional
 public class ProductService {
 
     private final ProductRepository productRepository;
@@ -54,7 +53,9 @@ public class ProductService {
     }
 
 
-    //@CachePut(value = "products", key = "#result.id")
+
+
+    @Transactional//@CachePut(value = "products", key = "#result.id")
     public ProductDTO createProduct(ProductDTO productDTO) {
         Supplier supplier = supplierRepository.findById(productDTO.getSupplierId())
                 .orElseThrow(() -> new ResourceNotFoundException("Supplier with id " + productDTO.getSupplierId() + " not found."));
@@ -78,6 +79,7 @@ public class ProductService {
     }
 
     //@CachePut(value = "products", key = "#id")
+    @Transactional
     public ProductDTO updateProduct(Long id, ProductDTO productDTO) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product with id " + id + " not found"));
@@ -141,6 +143,7 @@ public class ProductService {
     }
 
    // @CacheEvict(value = "products", key = "#id")
+   @Transactional
    public void deleteProduct(Long id) {
        Product product = productRepository.findById(id)
                .orElseThrow(() -> new ResourceNotFoundException("Product with id " + id + " not found"));

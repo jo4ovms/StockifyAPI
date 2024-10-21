@@ -6,7 +6,6 @@ import com.jo4ovms.StockifyAPI.model.DTO.StockDTO;
 import com.jo4ovms.StockifyAPI.model.DTO.StockMovementDTO;
 
 import com.jo4ovms.StockifyAPI.repository.StockRepository;
-import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
@@ -19,7 +18,6 @@ import java.time.LocalDate;
 
 
 @Service
-@Transactional
 public class StockReportService {
 
     private final StockRepository stockRepository;
@@ -32,9 +30,6 @@ public class StockReportService {
         this.stockMapper = stockMapper;
         this.stockMovementMapper = stockMovementMapper;
     }
-
-
-
     public Page<StockMovementDTO> generateStockMovementReport(LocalDate startDate, LocalDate endDate, Pageable pageable) {
         return stockRepository.findStockMovementsByDateRange(startDate, endDate, pageable)
                 .map(stockMovementMapper::toStockMovementDTO);

@@ -16,7 +16,6 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 
 @Service
-@Transactional
 public class AggregatedSaleService {
     private final StockRepository stockRepository;
     private final AggregatedSaleRepository aggregatedSaleRepository;
@@ -28,6 +27,7 @@ public class AggregatedSaleService {
         this.productRepository = productRepository;
     }
 
+    @Transactional
     public void updateAggregatedSales(Long stockId, Long productId, int quantitySold) {
 
         AggregatedSale aggregatedSale = aggregatedSaleRepository.findByProductIdAndStockId(productId, stockId)
