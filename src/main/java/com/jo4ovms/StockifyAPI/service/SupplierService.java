@@ -22,10 +22,11 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import com.jo4ovms.StockifyAPI.model.Log.OperationType;
 import java.util.List;
+import java.util.Objects;
+import java.util.function.Consumer;
 
 
 @Service
-@Transactional
 public class SupplierService {
 
     private final SupplierRepository supplierRepository;
@@ -41,8 +42,17 @@ public class SupplierService {
         this.logUtils = logUtils;
     }
 
+    private <T> boolean updateField(Supplier supplier, T newValue, T currentValue, Consumer<T> setter) {
+        if (!Objects.equals(newValue, currentValue)) {
+            setter.accept(newValue);
+            return true;
+        }
+        return false;
+    }
+
 
     //@CachePut(value = "suppliers", key = "#result.id")
+    @Transactional
     public SupplierDTO createSupplier(SupplierDTO supplierDTO) {
         if (supplierRepository.existsByCnpj(supplierDTO.getCnpj())) {
             throw new DuplicateResourceException("Supplier with CNPJ " + supplierDTO.getCnpj() + " already exists.");
@@ -61,6 +71,7 @@ public class SupplierService {
     }
 
     //@CachePut(value = "suppliers", key = "#id")
+    @Transactional
     public SupplierDTO updateSupplier(Long id, SupplierDTO supplierDTO) {
         Supplier supplier = supplierRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Supplier with id " + id + " not found."));
@@ -70,28 +81,13 @@ public class SupplierService {
 
         boolean hasChanges = false;
 
-        if (!supplierDTO.getName().equals(supplier.getName())) {
-            supplier.setName(supplierDTO.getName());
-            hasChanges = true;
-        }
-
-        if (!supplierDTO.getPhone().equals(supplier.getPhone())) {
-            supplier.setPhone(supplierDTO.getPhone());
-            hasChanges = true;
-        }
-
-        if (!supplierDTO.getEmail().equals(supplier.getEmail())) {
-            supplier.setEmail(supplierDTO.getEmail());
-            hasChanges = true;
-        }
-
-        if (!supplierDTO.getProductType().equals(supplier.getProductType())) {
-            supplier.setProductType(supplierDTO.getProductType());
-            hasChanges = true;
-        }
+        hasChanges |= updateField(supplier, supplierDTO.getName(), supplier.getName(), supplier::setName);
+        hasChanges |= updateField(supplier, supplierDTO.getPhone(), supplier.getPhone(), supplier::setPhone);
+        hasChanges |= updateField(supplier, supplierDTO.getEmail(), supplier.getEmail(), supplier::setEmail);
+        hasChanges |= updateField(supplier, supplierDTO.getProductType(), supplier.getProductType(), supplier::setProductType);
 
         if (!hasChanges) {
-            return supplierMapper.toSupplierDTO(supplier);
+            return oldSupplierDTO;
         }
         Supplier updatedSupplier = supplierRepository.save(supplier);
 
@@ -123,6 +119,7 @@ public class SupplierService {
     }
 
    // @CacheEvict(value = "suppliers", key = "#id")
+   @Transactional
    public void deleteSupplier(Long id) {
        Supplier supplier = supplierRepository.findById(id)
                .orElseThrow(() -> new ResourceNotFoundException("Supplier with id " + id + " not found."));
