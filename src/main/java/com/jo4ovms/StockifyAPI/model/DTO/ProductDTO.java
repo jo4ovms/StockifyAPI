@@ -1,9 +1,6 @@
 package com.jo4ovms.StockifyAPI.model.DTO;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import lombok.Data;
 
 @Data
@@ -17,6 +14,7 @@ public class ProductDTO {
 
     @NotNull(message = "Product value is required.")
     @Positive(message = "Product value must be positive.")
+    @DecimalMin("0.0")
     private Double value;
 
     @NotNull(message = "Product quantity is required.")

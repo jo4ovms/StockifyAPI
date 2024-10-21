@@ -10,6 +10,7 @@ import com.jo4ovms.StockifyAPI.model.Product;
 import com.jo4ovms.StockifyAPI.model.Supplier;
 import com.jo4ovms.StockifyAPI.repository.ProductRepository;
 import com.jo4ovms.StockifyAPI.repository.SupplierRepository;
+import com.jo4ovms.StockifyAPI.util.LogUtils;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
@@ -21,26 +22,39 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import com.jo4ovms.StockifyAPI.model.Log.OperationType;
 
+import java.util.Objects;
+import java.util.function.Consumer;
 
 
 @Service
 @Transactional
 public class ProductService {
 
-    @Autowired
-    private ProductRepository productRepository;
+    private final ProductRepository productRepository;
+    private final SupplierRepository supplierRepository;
+    private final ProductMapper productMapper;
+    private final LogService logService;
+    private final ObjectMapper objectMapper;
+    private final LogUtils logUtils;
 
     @Autowired
-    private SupplierRepository supplierRepository;
+    public ProductService(ProductRepository productRepository, SupplierRepository supplierRepository, ProductMapper productMapper, LogService logService, ObjectMapper objectMapper, LogUtils logUtils) {
+        this.productRepository = productRepository;
+        this.supplierRepository = supplierRepository;
+        this.productMapper = productMapper;
+        this.logService = logService;
+        this.objectMapper = objectMapper;
+        this.logUtils = logUtils;
+    }
 
-    @Autowired
-    private ProductMapper productMapper;
+    private <T> boolean updateField(Product product, T newValue, T currentValue, Consumer<T> setter) {
+        if (!Objects.equals(newValue, currentValue)) {
+            setter.accept(newValue);
+            return true;
+        }
+        return false;
+    }
 
-    @Autowired
-    private LogService logService;
-
-    @Autowired
-    private ObjectMapper objectMapper;
 
     //@CachePut(value = "products", key = "#result.id")
     public ProductDTO createProduct(ProductDTO productDTO) {
@@ -57,17 +71,9 @@ public class ProductService {
 
         LogDTO logDTO = new LogDTO();
         logDTO.setTimestamp(savedProduct.getCreatedAt());
-        logDTO.setEntity("Product");
-        logDTO.setEntityId(savedProduct.getId());
-        logDTO.setOperationType(OperationType.CREATE.toString());
-        try {
-            String newValueJson = objectMapper.writeValueAsString(productMapper.toProductDTO(savedProduct));
-            logDTO.setNewValue(newValueJson);
-        } catch (Exception e) {
-            e.printStackTrace();
-            logDTO.setNewValue("Error serializing new value");
-        }
-        logDTO.setDetails("Created new product");
+        logUtils.populateLog(logDTO, "Product", savedProduct.getId(), OperationType.CREATE.toString(),
+                productMapper.toProductDTO(savedProduct), null, "Created new product");
+
         logService.createLog(logDTO);
 
         return productMapper.toProductDTO(savedProduct);
@@ -82,34 +88,24 @@ public class ProductService {
 
         ProductDTO oldProductDTO = productMapper.toProductDTO(product);
 
-        product.setName(productDTO.getName());
-        product.setValue(productDTO.getValue());
-        product.setQuantity(productDTO.getQuantity());
-        product.setSupplier(supplier);
+        boolean hasChanges = false;
+        hasChanges |= updateField(product, productDTO.getName(), product.getName(), product::setName);
+        hasChanges |= updateField(product, productDTO.getValue(), product.getValue(), product::setValue);
+        hasChanges |= updateField(product, productDTO.getQuantity(), product.getQuantity(), product::setQuantity);
+        hasChanges |= updateField(product, supplier, product.getSupplier(), product::setSupplier);
+
+        if (!hasChanges) {
+            return oldProductDTO;
+        }
 
         Product updatedProduct = productRepository.save(product);
 
 
         LogDTO logDTO = new LogDTO();
         logDTO.setTimestamp(updatedProduct.getUpdatedAt());
-        logDTO.setEntity("Product");
-        logDTO.setEntityId(updatedProduct.getId());
-        logDTO.setOperationType(OperationType.UPDATE.toString());
-        try {
-            String oldValueJson = objectMapper.writeValueAsString(oldProductDTO);
-            logDTO.setOldValue(oldValueJson);
-        } catch (Exception e) {
-            e.printStackTrace();
-            logDTO.setOldValue("Error serializing old value");
-        }
-        try {
-            String newValueJson = objectMapper.writeValueAsString(productMapper.toProductDTO(updatedProduct));
-            logDTO.setNewValue(newValueJson);
-        } catch (Exception e) {
-            e.printStackTrace();
-            logDTO.setNewValue("Error serializing new value");
-        }
-        logDTO.setDetails("Updated product");
+        logUtils.populateLog(logDTO, "Product", updatedProduct.getId(), OperationType.UPDATE.toString(),
+                productMapper.toProductDTO(updatedProduct), oldProductDTO, "Updated product");
+
         logService.createLog(logDTO);
 
         return productMapper.toProductDTO(updatedProduct);
@@ -156,17 +152,8 @@ public class ProductService {
 
        LogDTO logDTO = new LogDTO();
        logDTO.setTimestamp(product.getUpdatedAt());
-       logDTO.setEntity("Product");
-       logDTO.setEntityId(product.getId());
-       logDTO.setOperationType(OperationType.DELETE.toString());
-       try {
-           String oldValueJson = objectMapper.writeValueAsString(oldProductDTO);
-           logDTO.setOldValue(oldValueJson);
-       } catch (Exception e) {
-           e.printStackTrace();
-           logDTO.setOldValue("Error serializing old value");
-       }
-       logDTO.setDetails("Deleted product");
+       logUtils.populateLog(logDTO, "Product", product.getId(), OperationType.DELETE.toString(), null, oldProductDTO, "Deleted product");
+
        logService.createLog(logDTO);
    }
 
