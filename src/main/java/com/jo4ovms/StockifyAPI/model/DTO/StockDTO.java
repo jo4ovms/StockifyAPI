@@ -1,5 +1,6 @@
 package com.jo4ovms.StockifyAPI.model.DTO;
 
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
@@ -18,6 +19,7 @@ public class StockDTO {
 
     @NotNull(message = "Stock value is required")
     @PositiveOrZero(message = "Stock value must be zero or positive")
+    @DecimalMin("0.0")
     private Double value;
 
 

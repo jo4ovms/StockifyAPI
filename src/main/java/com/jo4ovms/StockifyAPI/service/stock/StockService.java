@@ -11,6 +11,7 @@ import com.jo4ovms.StockifyAPI.model.Stock;
 import com.jo4ovms.StockifyAPI.repository.ProductRepository;
 import com.jo4ovms.StockifyAPI.repository.StockRepository;
 import com.jo4ovms.StockifyAPI.service.LogService;
+import com.jo4ovms.StockifyAPI.util.LogUtils;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import com.jo4ovms.StockifyAPI.model.Log.OperationType;
@@ -23,27 +24,38 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-
+import java.util.Objects;
+import java.util.function.Consumer;
 
 
 @Service
 @Transactional
 public class StockService {
 
-    @Autowired
-    private StockRepository stockRepository;
+
+    private final StockRepository stockRepository;
+    private final LogUtils logUtils;
+    private final ProductRepository productRepository;
+    private final StockMapper stockMapper;
+    private final LogService logService;
 
     @Autowired
-    private ProductRepository productRepository;
+    public StockService(StockRepository stockRepository, LogUtils logUtils, ProductRepository productRepository, StockMapper stockMapper, LogService logService) {
+        this.stockRepository = stockRepository;
+        this.logUtils = logUtils;
+        this.productRepository = productRepository;
+        this.stockMapper = stockMapper;
+        this.logService = logService;
 
-    @Autowired
-    private StockMapper stockMapper;
 
-    @Autowired
-    private LogService logService;
-
-    @Autowired
-    private ObjectMapper objectMapper;
+    }
+    private <T> boolean updateField(Stock stock, T newValue, T currentValue, Consumer<T> setter) {
+        if (!Objects.equals(newValue, currentValue)) {
+            setter.accept(newValue);
+            return true;
+        }
+        return false;
+    }
 
    // @CacheEvict(value = "stocks", allEntries = true)
    public StockDTO createStock(StockDTO stockDTO) {
@@ -57,20 +69,8 @@ public class StockService {
 
        LogDTO logDTO = new LogDTO();
        logDTO.setTimestamp(savedStock.getCreatedAt());
-       logDTO.setEntity("Stock");
-       logDTO.setEntityId(savedStock.getId());
-       logDTO.setOperationType(OperationType.CREATE.toString());
-       logDTO.setAvailable(savedStock.isAvailable());
-
-       try {
-           String newValueJson = objectMapper.writeValueAsString(stockMapper.toStockDTO(savedStock));
-           logDTO.setNewValue(newValueJson);
-       } catch (Exception e) {
-           e.printStackTrace();
-           logDTO.setNewValue("Error serializing new value");
-       }
-
-       logDTO.setDetails("Created new stock");
+       logUtils.populateLog(logDTO, "Stock", savedStock.getId(), OperationType.CREATE.toString(),
+               stockMapper.toStockDTO(savedStock), null, "Created new Stock" );
 
        logService.createLog(logDTO);
        return stockMapper.toStockDTO(savedStock);
@@ -87,37 +87,23 @@ public class StockService {
        StockDTO oldStockDTO = stockMapper.toStockDTO(stock);
 
 
-       stock.setQuantity(stockDTO.getQuantity());
-       stock.setValue(stockDTO.getValue());
-       stock.setProduct(product);
+       boolean hasChanges = false;
+       hasChanges |= updateField(stock, stockDTO.getQuantity(), stock.getQuantity(), stock::setQuantity);
+       hasChanges |= updateField(stock, stockDTO.getValue(), stock.getValue(), stock::setValue);
+       hasChanges |= updateField(stock, product, stock.getProduct(), stock::setProduct);
+
        stock.setAvailable(stockDTO.getQuantity() > 0);
 
+       if (!hasChanges) {
+           return oldStockDTO;
+       }
 
        Stock updatedStock = stockRepository.save(stock);
 
 
        LogDTO logDTO = new LogDTO();
        logDTO.setTimestamp(LocalDateTime.now());
-       logDTO.setEntity("Stock");
-       logDTO.setEntityId(updatedStock.getId());
-       logDTO.setOperationType(OperationType.UPDATE.toString());
-
-       try {
-           String oldValueJson = objectMapper.writeValueAsString(oldStockDTO);
-           logDTO.setOldValue(oldValueJson);
-       } catch (Exception e) {
-           e.printStackTrace();
-           logDTO.setOldValue("Error serializing old value");
-       }
-       try {
-           String newValueJson = objectMapper.writeValueAsString(stockMapper.toStockDTO(updatedStock));
-           logDTO.setNewValue(newValueJson);
-       } catch (Exception e) {
-           e.printStackTrace();
-           logDTO.setNewValue("Error serializing new value");
-       }
-
-       logDTO.setDetails("Updated stock");
+       logUtils.populateLog(logDTO, "Stock", updatedStock.getId(), OperationType.UPDATE.toString(), stockMapper.toStockDTO(updatedStock), oldStockDTO, "Updated Stock");
        logService.createLog(logDTO);
 
        return stockMapper.toStockDTO(updatedStock);
@@ -153,18 +139,7 @@ public class StockService {
 
         LogDTO logDTO = new LogDTO();
         logDTO.setTimestamp(stock.getUpdatedAt());
-        logDTO.setEntity("Stock");
-        logDTO.setEntityId(stock.getId());
-        logDTO.setOperationType(OperationType.DELETE.toString());
-        try {
-            String oldValueJson = objectMapper.writeValueAsString(oldStockDTO);
-            logDTO.setOldValue(oldValueJson);
-        } catch (Exception e) {
-            e.printStackTrace();
-            logDTO.setOldValue("Error serializing old value");
-        }
-        logDTO.setDetails("Deleted stock");
-
+        logUtils.populateLog(logDTO, "Stock", stock.getId(), OperationType.DELETE.toString(), null, oldStockDTO, "Deleted stock");
         logService.createLog(logDTO);
    }
 
@@ -213,8 +188,8 @@ public class StockService {
         List<Stock> stocks = stockRepository.findAll();
         long totalProducts = stocks.size();
         long zeroQuantity = stocks.stream().filter(s -> s.getQuantity() == 0).count();
-        long aboveThreshold = stocks.stream().filter(s -> s.getQuantity() > 5).count();
-        long betweenThreshold = stocks.stream().filter(s -> s.getQuantity() > 0 && s.getQuantity() <= 5).count();
+        long aboveThreshold = stocks.stream().filter(s -> s.getQuantity() >= 5).count();
+        long betweenThreshold = stocks.stream().filter(s -> s.getQuantity() > 0 && s.getQuantity() < 5).count();
 
         return new StockSummaryDTO(totalProducts, zeroQuantity, aboveThreshold, betweenThreshold);
     }
