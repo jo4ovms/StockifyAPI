@@ -16,11 +16,14 @@ public class AggregatedSale {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @ManyToOne(optional = true, cascade = CascadeType.PERSIST)
+    @JoinColumn(name = "stock_id", foreignKey = @ForeignKey(name = "fk_aggregated_sale_stock"), nullable = true)
+    private Stock stock;
+
     @ManyToOne
     private Product product;
 
-    @ManyToOne
-    private Stock stock;
+
     private Long totalQuantitySold;
 
     private LocalDate saleDate;

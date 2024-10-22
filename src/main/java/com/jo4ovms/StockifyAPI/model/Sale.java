@@ -21,9 +21,9 @@ public class Sale {
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "stock_id", nullable = false)
-    private Stock stock;
+
+    @Column(name = "stock_value_at_sale")
+    private Double stockValueAtSale;
 
     @NotNull
     @Column(nullable = false)

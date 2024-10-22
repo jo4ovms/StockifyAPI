@@ -14,8 +14,8 @@ public class SaleDTO {
     @Positive(message = "Sale Quantity must be greater than zero.")
     private Integer quantity;
 
-    @NotNull(message = "Stock ID is required.")
-    private Long stockId;
-
     private String productName;
+
+    private Double stockValueAtSale;
 }
+

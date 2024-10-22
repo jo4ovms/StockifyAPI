@@ -45,41 +45,51 @@ public class SaleService {
     @Transactional
     public SaleDTO registerSale(SaleDTO saleDTO) {
 
-        Stock stock = stockRepository.findById(saleDTO.getStockId())
-                .orElseThrow(() -> new ResourceNotFoundException("Stock with id " + saleDTO.getStockId() + " not found"));
+        Stock stock = stockRepository.findByProductId(saleDTO.getProductId())
+                .orElseThrow(() -> new ResourceNotFoundException("Stock for product ID " + saleDTO.getProductId() + " not found"));
+
 
         if (stock.getQuantity() < saleDTO.getQuantity()) {
-            throw new IllegalArgumentException("Insufficient stock. Requested quantity exceeds available stock");
+            throw new IllegalArgumentException("Insufficient stock. Requested quantity exceeds available stock.");
         }
+
 
         stock.setQuantity(stock.getQuantity() - saleDTO.getQuantity());
         stock.setAvailable(stock.getQuantity() > 0);
         stockRepository.save(stock);
 
-        Sale sale = saleMapper.toSale(saleDTO);
+
+        Sale sale = new Sale();
         sale.setProduct(stock.getProduct());
-        sale.setStock(stock);
+        sale.setQuantity(saleDTO.getQuantity());
+        sale.setStockValueAtSale(stock.getValue());
+
 
         Sale savedSale = saleRepository.save(sale);
 
-        String productName = stock.getProduct().getName();
 
         SaleDTO saleLogDTO = saleMapper.toSaleDTO(savedSale);
         saleLogDTO.setProductId(stock.getProduct().getId());
-        saleLogDTO.setProductName(productName);
+        saleLogDTO.setProductName(stock.getProduct().getName());
+        saleLogDTO.setStockValueAtSale(stock.getValue());
+
 
         LogDTO logDTO = new LogDTO();
         logDTO.setTimestamp(savedSale.getSaleDate());
-        logUtils.populateLog(logDTO, "Sale", savedSale.getId(), Log.OperationType.CREATE.toString(), saleLogDTO, null,
-                "Sale registered: Stock ID " + stock.getId() + ", Product: " + productName + ", Quantity: " + saleDTO.getQuantity());
+        logUtils.populateLog(logDTO, "Sale", savedSale.getId(), Log.OperationType.CREATE.toString(),
+                saleLogDTO, null, "Sale registered: Product ID " + stock.getProduct().getId() +
+                        ", Quantity: " + saleDTO.getQuantity());
+
 
         logService.createLog(logDTO);
 
 
-        aggregatedSaleService.updateAggregatedSales(stock.getId(), stock.getProduct().getId(), saleDTO.getQuantity());
+        aggregatedSaleService.updateAggregatedSales(stock.getId(), stock.getProduct().getId(), saleDTO.getQuantity().longValue());
 
         return saleLogDTO;
     }
+
+
 
     public List<BestSellingItemDTO> getBestSellingItems() {
         return saleRepository.findBestSellingItems();

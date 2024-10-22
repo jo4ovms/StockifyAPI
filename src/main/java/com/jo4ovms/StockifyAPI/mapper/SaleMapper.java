@@ -7,7 +7,6 @@ import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
 public interface SaleMapper {
-    @Mapping(source = "stock.id", target = "stockId")
     @Mapping(source = "product.name", target = "productName")
     SaleDTO toSaleDTO(Sale sale);
 

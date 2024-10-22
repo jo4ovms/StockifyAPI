@@ -28,7 +28,7 @@ public class AggregatedSaleService {
     }
 
     @Transactional
-    public void updateAggregatedSales(Long stockId, Long productId, int quantitySold) {
+    public void updateAggregatedSales(Long stockId, Long productId, Long quantitySold) {
 
         AggregatedSale aggregatedSale = aggregatedSaleRepository.findByProductIdAndStockId(productId, stockId)
                 .orElse(new AggregatedSale());
